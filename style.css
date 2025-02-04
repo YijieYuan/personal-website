@@ -197,3 +197,21 @@
     /* Always reserve space for a vertical scrollbar to prevent shifting */
     overflow-y: scroll;
   }
+
+  /* ====================================
+     8. Links
+  ==================================== */
+
+  a {
+    text-decoration: none; /* Remove underline */
+    color: inherit; /* Keeps the text color the same as surrounding text */
+  }
+  
+  a:visited {
+    color: inherit; /* Ensures the color does not change after visiting */
+  }
+  
+  a:hover {
+    text-decoration: underline; /* Optional: Adds underline on hover for better UX */
+  }
+  

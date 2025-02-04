@@ -1,0 +1,19 @@
+/* 1) Import a digital-style font (optional) */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+
+/* 2) Style the LED display text */
+.led-display {
+  display: inline-block;
+  font-family: 'Orbitron', monospace; /* Fallback to monospace if Orbitron fails */
+  font-size: 1rem;
+  color: #4aa553;                    /* Bright red digits */
+  background-color: #ffffff;            /* Black background like a digital clock */
+  padding: 0.2em 0.0em;
+  border-radius: 0.2em;
+
+  /* A subtle glowing effect */
+  /* text-shadow:
+    0 0 5px rgba(255, 0, 0, 0.8),
+    0 0 10px rgba(255, 0, 0, 0.6),
+    0 0 15px rgba(255, 0, 0, 0.4); */
+}
