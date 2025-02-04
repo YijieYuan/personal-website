@@ -1,0 +1,32 @@
+/* Override paragraph styles for better readability in projects.html */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+p {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #444; /* Adjusted for better readability on dark backgrounds */
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: none;
+    text-align: justify;
+}
+
+.publications-title {
+    font-size: 0.95rem; /* Smaller font size */
+    color: #555; /* Distinct blue */
+    margin-top: 5px; /* Reduced gap above */
+    margin-bottom: -10px; /* Reduced gap below */
+}
+
+.publications-list {
+    font-size: 0.8rem; /* Smaller font size */
+    color: #555; /* Slightly lighter than main text */
+    list-style-type: square;
+    margin-left: 15px;
+}
+
+.publications-list li {
+    margin-bottom: 5px; /* Reduced spacing between items */
+}
+

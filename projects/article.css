@@ -1,6 +1,8 @@
 /* ====================================
    Project Page Styling (Mimic Reference)
 ==================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
 .project-container {
     max-width: 800px;
     margin: 0 auto;
