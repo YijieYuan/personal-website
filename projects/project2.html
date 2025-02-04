@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Physics Informed Radiomics Standardization</title>
+
+  <!-- Keep these preconnects -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+
+  <!-- 1) Add "Inter" alongside "Source Code Pro" -->
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
+
+  <!-- Existing CSS links -->
+  <link rel="stylesheet" href="../style.css"/>
+  <link rel="stylesheet" href="project.css"/> <!-- NEW -->
+  <script src="../script.js" defer></script>
+
+</head>
+<body>
+  <header>
+    <nav class="header-nav">
+      <ul>
+        <li><a href="../home.html">home</a></li>
+        <li><a href="../projects.html">projects</a></li>
+        <li><a href="#cv">cv</a></li>
+      </ul>
+      <span class="last-updated">Last Updated: <span id="update-date"></span></span>
+    </nav>
+  </header>
+
+  <div class="project-container">
+    <h1>Physics Informed Radiomics Standardization Standardization</h1>
+    <p class="meta-info">Date: February 3, 2025 | Author: Yijie Yuan</p>
+
+    <p>Developed algorithms for differentiable approximation of radiomics features such as Histogram, GLCM, and GLRLM-based features.</p>
+
+    <h2>Background</h2>
+    <p>Variability in radiomics feature extraction due to different imaging conditions is a major limitation in AI-based diagnostics.</p>
+
+    <h2>Methods</h2>
+    <p>Our approach introduces a feature loss function that stabilizes radiomics representation across varying imaging conditions.</p>
+
+    <!-- GIF Section -->
+    <h2>Differentiable GLRLM Calculation</h2>
+    <p>The animation below demonstrates our differentiable GLRLM computation in action:</p>
+    <div class="gif-container">
+      <img src="Differentiable GLRLM.gif" alt="GLRLM Calculation Animation">
+    </div>
+
+    <h2>Results</h2>
+    <p>We achieve more consistent radiomics features, leading to better performance in downstream classification tasks.</p>
+
+    <h2>Conclusion</h2>
+    <p>Our method reduces radiomics feature variability, making AI models more generalizable.</p>
+
+    <div class="project-divider"></div>
+  </div>
+
+  <footer>
+    &copy; 2025 Yijie Yuan.
+  </footer>
+</body>
+</html>
