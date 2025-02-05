@@ -72,3 +72,40 @@
     height: 2px;
     background-color: #e0e0e0;
 }
+
+
+/***********************************************
+ * Figure & Caption Styling
+ ***********************************************/
+
+/* Container for the figure and its caption */
+.my-figure {
+    margin: 2em auto;        /* Center horizontally, add spacing above/below */
+    text-align: center;      /* Center the contents (image + caption) */
+    max-width: 800px;        /* Constrain the figure width on large screens */
+  }
+  
+  /* Make sure the image is responsive and doesn't overflow */
+  .my-figure img {
+    max-width: 100%;
+    height: auto;
+    display: block;          /* Remove inline spacing/gaps */
+    margin: 0 auto;
+  }
+  
+  /* Style the caption text (figcaption) */
+  .my-figure figcaption {
+    margin-top: 0.5em;       /* Space above caption */
+    font-size: 0.9rem;       /* Slightly smaller than normal text */
+    color: #555;             /* Medium-dark gray for a subtle look */
+    line-height: 1.4;        /* Comfortable line spacing */
+    /* You could optionally use font-style: italic; if you like an italic caption */
+  }
+  
+  /* For an optional "source" note inside the caption */
+  .my-figure .image-source {
+    margin-left: 0.5em;      /* Small spacing before the source text */
+    color: #999;             /* Lighter gray for the source info */
+    font-style: italic;
+  }
+  
