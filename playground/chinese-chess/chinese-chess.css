@@ -31,13 +31,13 @@
 /* Pieces */
 .piece {
     position: absolute;
-    width: 50px; /* Matches the scatter point size */
-    height: 50px;
+    width: 45px; /* Matches the scatter point size */
+    height: 45px;
     border-radius: 50%;
     font-size: 20px;
     font-weight: bold;
     text-align: center;
-    line-height: 50px;
+    line-height: 45px;
     cursor: pointer;
     background: #fff;
     border: 2px solid;
@@ -58,9 +58,13 @@
     border-color: black;
 }
 
-/* Selected Piece Highlight (using box-shadow only) */
-.piece.selected {
-    box-shadow: 0 0 10px blue;
+/* Selected Piece Highlight with Different Shadows */
+.piece.selected.red {
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.8), 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+.piece.selected.black {
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 /* Control Buttons */

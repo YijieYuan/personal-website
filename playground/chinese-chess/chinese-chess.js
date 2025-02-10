@@ -48,9 +48,25 @@ document.addEventListener("DOMContentLoaded", function () {
         boardState[`${row},${col}`] = piece;
     }
 
+    // Helper functions for selecting and deselecting pieces with proper color outlines.
+    function selectPiece(piece) {
+        piece.classList.add("selected");
+        // if (piece.dataset.color === "r") {
+            // piece.style.outline = "2px solid red";
+        // } else {
+            // piece.style.outline = "2px solid black";
+        // }
+    }
+    function deselectPiece(piece) {
+        piece.classList.remove("selected");
+        piece.style.outline = "";
+    }
+
     // Update the turn indicator.
     function updateTurnIndicator() {
-        turnIndicator.textContent = "Current Turn: " + (currentTurn === "r" ? "Red" : "Black");
+        if (!gameOver) {
+            turnIndicator.textContent = "Current Turn: " + (currentTurn === "r" ? "Red" : "Black");
+        }
     }
     updateTurnIndicator();
 
@@ -213,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update the move log panel.
     function updateMoveLog() {
         moveLogElement.innerHTML = "";
-        moveLog.forEach(function(move) {
+        moveLog.forEach(function (move) {
             const li = document.createElement("li");
             li.textContent = move;
             moveLogElement.appendChild(li);
@@ -222,6 +238,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Attempt to move the currently selected piece to the given grid cell.
     function attemptMove(piece, toRow, toCol) {
+        // Prevent any further moves if the game is over.
+        if (gameOver) {
+            return;
+        }
         const fromRow = parseInt(piece.dataset.row);
         const fromCol = parseInt(piece.dataset.col);
 
@@ -266,7 +286,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Save move details for undo.
+        // Save move details for undo (store the current turn as prevTurn).
         moveHistory.push({
             piece: piece,
             fromRow: fromRow,
@@ -275,7 +295,8 @@ document.addEventListener("DOMContentLoaded", function () {
             toCol: toCol,
             captured: capturedPiece,
             oldTop: oldTop,
-            oldLeft: oldLeft
+            oldLeft: oldLeft,
+            prevTurn: currentTurn
         });
 
         // Record the move in the log.
@@ -284,31 +305,41 @@ document.addEventListener("DOMContentLoaded", function () {
         // Check for game over if a king was captured.
         if (capturedPiece && (capturedPiece.dataset.code === "rK" || capturedPiece.dataset.code === "bK")) {
             const winner = capturedPiece.dataset.code === "rK" ? "Black" : "Red";
-            moveLog.push(`${winner} wins!`);
+            moveLog.push(`Game Over: ${winner} wins!`);
             if (moveLog.length > 10) moveLog.shift();
             updateMoveLog();
             gameOver = true;
-            // (Undo is still allowed even after a win.)
+            turnIndicator.textContent = `Game Over: ${winner} wins!`;
+            // Do not switch turn after game over.
+            return;
         }
 
         // Deselect the piece.
-        piece.classList.remove("selected");
+        deselectPiece(piece);
         selectedPiece = null;
 
-        // Switch turn.
+        // Switch turn (for a normal move, set to the opposite side).
         currentTurn = currentTurn === "r" ? "b" : "r";
         updateTurnIndicator();
     }
 
     // The board’s click handler manages both selection and move attempts.
     board.addEventListener("click", function (event) {
-        // If game over, still allow selection and undo (moves will be blocked by gameOver flag in attemptMove)
+        // Ignore board clicks if the game is over.
+        if (gameOver) {
+            return;
+        }
         const rect = board.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
         const clickY = event.clientY - rect.top;
-        // Determine the nearest grid cell.
-        const gridRow = Math.round((clickY - boardOffsetY) / cellSize);
-        const gridCol = Math.round((clickX - boardOffsetX) / cellSize);
+        // Use a centered calculation to expand the clickable area.
+        const gridCol = Math.floor((clickX - boardOffsetX + cellSize / 2) / cellSize);
+        const gridRow = Math.floor((clickY - boardOffsetY + cellSize / 2) / cellSize);
+
+        // Boundary check: ensure the click is within the board limits.
+        if (gridRow < 0 || gridRow >= 10 || gridCol < 0 || gridCol >= 9) {
+            return;
+        }
 
         if (event.target.classList.contains("piece")) {
             // Clicked directly on a piece.
@@ -316,18 +347,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 // If no piece is selected, select this one if it belongs to the current turn.
                 if (event.target.dataset.color === currentTurn) {
                     selectedPiece = event.target;
-                    selectedPiece.classList.add("selected");
+                    selectPiece(selectedPiece);
                 }
             } else {
                 if (event.target === selectedPiece) {
                     // Deselect if clicking the same piece.
-                    selectedPiece.classList.remove("selected");
+                    deselectPiece(selectedPiece);
                     selectedPiece = null;
                 } else if (event.target.dataset.color === currentTurn) {
                     // Switch selection to a different friendly piece.
-                    selectedPiece.classList.remove("selected");
+                    deselectPiece(selectedPiece);
                     selectedPiece = event.target;
-                    selectedPiece.classList.add("selected");
+                    selectPiece(selectedPiece);
                 } else {
                     // If an enemy piece is clicked, attempt a capture by moving to its cell.
                     const destRow = parseInt(event.target.dataset.row);
@@ -347,16 +378,24 @@ document.addEventListener("DOMContentLoaded", function () {
     undoButton.addEventListener("click", function () {
         if (moveHistory.length === 0) return;
         const lastMove = moveHistory.pop();
-        moveLog.pop();  // Remove the move log record (if it was a winning move, this removes the win message)
+
+        // If the undone move was a winning move, remove both the winning move and the extra game-over message.
+        if (lastMove.captured && (lastMove.captured.dataset.code === "rK" || lastMove.captured.dataset.code === "bK")) {
+            moveLog.pop(); // Remove game-over message.
+            moveLog.pop(); // Remove the winning move record.
+        } else {
+            moveLog.pop();
+        }
         updateMoveLog();
-        // Remove the piece from its new cell.
+
+        // Revert the move.
         delete boardState[`${lastMove.toRow},${lastMove.toCol}`];
-        // Move it back.
         lastMove.piece.style.top = lastMove.oldTop;
         lastMove.piece.style.left = lastMove.oldLeft;
         lastMove.piece.dataset.row = lastMove.fromRow;
         lastMove.piece.dataset.col = lastMove.fromCol;
         boardState[`${lastMove.fromRow},${lastMove.fromCol}`] = lastMove.piece;
+
         // If a piece was captured, restore it.
         if (lastMove.captured) {
             lastMove.captured.style.display = "block";
@@ -364,10 +403,11 @@ document.addEventListener("DOMContentLoaded", function () {
             // If a king was captured in that move, undo game over.
             if (lastMove.captured.dataset.code === "rK" || lastMove.captured.dataset.code === "bK") {
                 gameOver = false;
+                updateTurnIndicator();
             }
         }
-        // Switch turn back.
-        currentTurn = currentTurn === "r" ? "b" : "r";
+        // Restore the previous turn from before the move was made.
+        currentTurn = lastMove.prevTurn;
         updateTurnIndicator();
     });
 
