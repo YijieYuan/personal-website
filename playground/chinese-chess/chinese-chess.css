@@ -1,0 +1,128 @@
+/* ====================================
+   Chess Game Custom Styles
+==================================== */
+
+/* Wrapper for board and move log */
+.game-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Board Container */
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Xiangqi Board */
+#xiangqi-board {
+    position: relative;
+    width: 540px;
+    height: 600px;
+    background: url('img/chessboard.png') no-repeat center center;
+    /* background-size: contain; */
+    border: 1px solid #333;
+}
+
+/* Pieces */
+.piece {
+    position: absolute;
+    width: 50px; /* Matches the scatter point size */
+    height: 50px;
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 50px;
+    cursor: pointer;
+    background: #fff;
+    border: 2px solid;
+    z-index: 10;
+    /* Ensure pieces align exactly at intersections */
+    transform: translate(-50%, -50%);
+}
+
+/* Red Pieces */
+.piece.red {
+    color: red;
+    border-color: red;
+}
+
+/* Black Pieces */
+.piece.black {
+    color: black;
+    border-color: black;
+}
+
+/* Selected Piece Highlight (using box-shadow only) */
+.piece.selected {
+    box-shadow: 0 0 10px blue;
+}
+
+/* Control Buttons */
+.controls {
+    margin-top: 15px;
+}
+
+.controls button {
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-right: 10px;
+    transition: 0.3s;
+}
+
+.controls button:hover {
+    background: #2a2a2a;
+}
+
+/* Move Log Container */
+.move-log-container {
+    width: 250px;
+    background: #fff;
+    border: 1px solid #333;
+    border-radius: 5px;
+    padding: 10px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.move-log-container h2 {
+    margin-top: 0;
+}
+
+/* Turn Indicator Styling */
+#turn-indicator {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Move Log List */
+#move-log {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#move-log li {
+    padding: 5px;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#move-log li:last-child {
+    border-bottom: none;
+}

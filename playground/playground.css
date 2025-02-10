@@ -1,0 +1,7 @@
+.section {
+    display: grid;
+    grid-template-columns: 180px 1fr; /* Title on left, content on right */
+    column-gap: 1.5rem;
+    align-items: start;
+    margin-bottom: 1.5rem;
+    }

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chinese Chess (Xiangqi)</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet" />
+
+  <!-- Global Styles (for centering etc.) -->
+  <link rel="stylesheet" href="../../style.css" />
+  <!-- Custom Chess Styles -->
+  <link rel="stylesheet" href="chinese-chess.css" />
+</head>
+<body>
+
+  <header>
+    <nav class="header-nav">
+      <ul>
+        <li><a href="../../">home</a></li>
+        <li><a href="../../projects/">projects</a></li>
+        <li><a href="../">playground</a></li>
+        <li><a href="../../cv/">cv</a></li>
+      </ul>
+      <span class="last-updated">Last Updated: <span id="update-date"></span></span>
+    </nav>
+  </header>
+
+  <h1>Chinese Chess (Xiangqi)</h1>
+
+  <div class="game-wrapper">
+    <!-- Left: Game board and controls -->
+    <div class="game-container">
+      <div id="xiangqi-board">
+        <!-- Pieces will be dynamically placed here -->
+      </div>
+      <div class="controls">
+        <button id="undoMove">Undo</button>
+        <button id="resetBoard">Reset</button>
+      </div>
+    </div>
+    <!-- Right: Move Log with Turn Indicator -->
+    <div class="move-log-container">
+      <h2>Move Log</h2>
+      <div id="turn-indicator">Current Turn: Red</div>
+      <ul id="move-log">
+        <!-- Last 10 moves will appear here -->
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    &copy; 2025 Yijie Yuan.
+  </footer>
+
+  <!-- Game Logic -->
+  <script src="chinese-chess.js"></script>
+
+  <!-- Last Updated Script -->
+  <script>
+    document.getElementById("update-date").textContent = new Date(document.lastModified).toLocaleDateString();
+  </script>
+
+</body>
+</html>
