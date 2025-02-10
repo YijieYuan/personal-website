@@ -13,202 +13,213 @@
 }
 
 body {
-font-family: 'Source Code Pro', monospace;
-line-height: var(--line-height);
-margin: 0 auto;
-padding: 20px;
-max-width: 900px;
-background-color: var(--bg-color);
-color: var(--text-color);
-font-size: 14px;
+  font-family: 'Source Code Pro', monospace;
+  line-height: var(--line-height);
+  margin: 0 auto;
+  padding: 20px;
+  max-width: 900px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 14px;
 }
 
 /* ====================================
  2. Header Navigation
 ==================================== */
 .header-nav {
-display: flex;
-justify-content: space-between;
-align-items: center;
-padding: 10px 0;
-border-bottom: 1px solid var(--separator-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--separator-color);
 }
 
 .header-nav ul {
-list-style: none;
-padding: 0;
-margin: 0;
-display: flex;
-gap: 15px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 15px;
 }
 
 .header-nav li a {
-font-size: 16px;
-text-decoration: none;
-color: var(--link-color);
-font-weight: bold;
+  font-size: 16px;
+  text-decoration: none;
+  color: var(--link-color);
+  font-weight: bold;
 }
 
 .last-updated {
-font-size: 14px;
-color: var(--subtitle-color);
-margin-left: auto;
+  font-size: 14px;
+  color: var(--subtitle-color);
+  margin-left: auto;
 }
 
 /* ====================================
  3. Section Layout
 ==================================== */
+/* Ensure section title aligns its first line with the content */
 .section {
-display: grid;
-grid-template-columns: 180px 1fr; /* Title on left, content on right */
-column-gap: 1.5rem;
-align-items: baseline;
-margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  column-gap: 1.5rem;
+  align-items: start; /* Aligns items to the top instead of centering */
 }
 
+/* Section title fix for multi-line alignment */
 .section-title {
-font-weight: bold;
-color: var(--accent-color);
-font-size: 16px;
-margin: 0;
-padding: 0;
+  font-weight: bold;
+  color: var(--accent-color);
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  display: block; /* Prevents flex from interfering */
 }
 
+/* Ensure section content does not have extra top margin */
 .section-content {
-margin: 0;
-padding: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.section-content p {
+  margin-top: 0; /* Removes any additional spacing */
+}
+
+.section-content h3 {
+  margin-top: 0; /* Removes any additional spacing */
 }
 
 /* ====================================
  4. About Me (Image + Text)
 ==================================== */
 .about-me {
-position: relative;
+  position: relative;
 }
 .about-me img {
-float: right;
-margin-left: 20px;
-margin-bottom: 10px;
-max-height: calc(var(--line-height) * 10);
-height: auto;
-object-fit: cover;
-border-radius: 10px;
-box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+  float: right;
+  margin-left: 20px;
+  margin-bottom: 10px;
+  max-height: calc(var(--line-height) * 10);
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
 }
 
 /* ====================================
  5. Experience
 ==================================== */
 .job-title {
-font-weight: bold;
-color: var(--accent-color);
+  font-weight: bold;
+  color: var(--accent-color);
 }
 .job-duration {
-font-size: 14px;
-color: var(--subtitle-color);
+  font-size: 14px;
+  color: var(--subtitle-color);
 }
 
 /* ====================================
  6. Contact Section
 ==================================== */
 .section.contact {
-background-color: #f8f9fa;             
-border-radius: 8px;                    
-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-margin-left: -20px;
-margin-right: -20px;
-margin-bottom: 1.5rem;
-padding: 20px;
+  background-color: #f8f9fa;             
+  border-radius: 8px;                    
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-left: -20px;
+  margin-right: -20px;
+  margin-bottom: 1.5rem;
+  padding: 20px;
 }
 
 .contact-label {
-font-weight: bold;
-display: block;
-margin-bottom: 5px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
 }
 
 .email-label {
-font-weight: bold;
-display: block;
-margin-bottom: 3px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 3px;
 }
 
 .contact-email {
-color: var(--text-color);
+  color: var(--text-color);
 }
 
 .contact-info-row {
-display: flex;
-gap: 40px; /* Space between the two email items */
+  display: flex;
+  gap: 40px; /* Space between the two email items */
 }
 
 .contact-note {
-font-size: 14px;
-color: var(--subtitle-color);
-margin-top: 5px;
+  font-size: 14px;
+  color: var(--subtitle-color);
+  margin-top: 5px;
 }
 
 .contact-buttons {
-display: flex;
-gap: 10px;
+  display: flex;
+  gap: 10px;
 }
 
 .btn {
-display: inline-block;
-padding: 8px 12px;
-font-size: 14px;
-font-weight: bold;
-border: 2px solid var(--accent-color);
-border-radius: 6px;
-text-decoration: none;
-color: var(--accent-color);
-background: transparent;
-transition: all 0.3s ease;
+  display: inline-block;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  border: 2px solid var(--accent-color);
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--accent-color);
+  background: transparent;
+  transition: all 0.3s ease;
 }
 .btn:hover {
-background: var(--accent-color);
-color: #ffffff;
+  background: var(--accent-color);
+  color: #ffffff;
 }
 
 /* NEW: Shrink the Instagram icon */
 .instagram-icon {
-width: 32px;
-height: 32px;
+  width: 32px;
+  height: 32px;
 }
 
 /* ====================================
  7. Divider & Footer
 ==================================== */
 .divider {
-margin: 1.5rem 0;
-height: 1px;
-background-color: var(--separator-color);
+  margin: 1.5rem 0;
+  height: 1px;
+  background-color: var(--separator-color);
 }
 
 footer {
-text-align: center;
-font-size: 12px;
-color: var(--subtitle-color);
-margin-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--subtitle-color);
+  margin-top: 20px;
 }
 
 /* Keep vertical scrollbar */
 html {
-overflow-y: scroll;
+  overflow-y: scroll;
 }
 
 /* ====================================
  8. Links
 ==================================== */
 a {
-text-decoration: none;
-color: inherit;
+  text-decoration: none;
+  color: inherit;
 }
 
 a:visited {
-color: inherit;
+  color: inherit;
 }
 
 a:hover {
-text-decoration: underline;
+  text-decoration: underline;
 }

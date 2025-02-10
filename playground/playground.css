@@ -1,7 +1,20 @@
+/* playground.css */
 .section {
-    display: grid;
-    grid-template-columns: 180px 1fr; /* Title on left, content on right */
-    column-gap: 1.5rem;
-    align-items: start;
-    margin-bottom: 1.5rem;
-    }
+  display: grid;
+  grid-template-columns: 180px 1fr;  /* Left: section title; Right: section content */
+  column-gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-weight: bold;
+  color: var(--accent-color);
+  font-size: 16px;
+  padding: 0;
+}
+
+/* Add a top padding to the board games content so its vertical position matches the home page */
+#board-games .section-content {
+  padding-top: 0.5em;
+}

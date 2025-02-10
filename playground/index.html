@@ -1,18 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Playground - Yijie Yuan</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet"/>
-  <!-- Link to the same style.css used by the Projects page -->
-  <link rel="stylesheet" href="../style.css"/>
-  <link rel="stylesheet" href="./playground.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet" />
+  <!-- Link to the common style.css and the playground.css file -->
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./playground.css" />
 </head>
 <body>
-
   <header>
     <nav class="header-nav">
       <ul>
@@ -27,15 +26,16 @@
 
   <h1>Playground</h1>
 
-  <!-- EXACT same structure as your “Projects” page. -->
+  <!-- Board Games Section -->
   <div class="section" id="board-games">
     <div class="section-title">Board Games</div>
     <div class="section-content">
       <div class="game-grid">
+        <!-- Single Game Card -->
         <div class="game-card">
           <a href="./chinese-chess/">
-            <img src="./chinese-chess.png" alt="Chinese Chess"/>
-            <div class="game-title">Chinese Chess(象棋)</div>
+            <img src="./chinese-chess.png" alt="Chinese Chess" />
+            <div class="game-title">Chinese Chess (象棋)</div>
           </a>
         </div>
       </div>
@@ -46,19 +46,18 @@
     &copy; 2025 Yijie Yuan.
   </footer>
 
-  <!-- Inline styles ONLY for .game-grid and .game-card -->
+  <!-- Inline styles only for the game grid and game card -->
   <style>
     .game-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      /* Set exactly three columns of fixed 180px width */
+      grid-template-columns: repeat(3, 180px);
       gap: 20px;
-      padding: 10px;
-      justify-content: center;
+      margin: 0;
     }
-
     .game-card {
-      width: 200px; /* Keep square shape */
-      height: 200px;
+      width: 180px;
+      height: 180px;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -69,34 +68,29 @@
       justify-content: space-between;
       overflow: hidden;
     }
-
     .game-card:hover {
       transform: translateY(-5px);
     }
-
     .game-card a {
       display: flex;
       flex-direction: column;
-      color: inherit;
-      text-decoration: none;
-      text-align: center;
       width: 100%;
       height: 100%;
+      text-align: center;
+      color: inherit;
+      text-decoration: none;
     }
-
     .game-card img {
       width: 100%;
-      height: 85%; /* More space for the image */
+      height: 85%;
       object-fit: cover;
     }
-
     .game-title {
-      font-size: 0.9em; /* Slightly smaller font */
+      height: 15%;
+      font-size: 0.9em;
       font-weight: bold;
-      padding: 6px; /* Reduce padding */
+      padding: 6px;
       background: #f5f5f5;
-      width: 100%;
-      height: 15%; /* Less height */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -106,6 +100,5 @@
   <script>
     document.getElementById("update-date").textContent = new Date(document.lastModified).toLocaleDateString();
   </script>
-
 </body>
 </html>
