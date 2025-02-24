@@ -161,12 +161,12 @@ body {
 
 .contact-buttons {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .btn {
   display: inline-block;
-  padding: 8px 12px;
+  padding: 5px 10px;
   font-size: 14px;
   font-weight: bold;
   border: 2px solid var(--accent-color);
@@ -222,4 +222,33 @@ a:visited {
 
 a:hover {
   text-decoration: underline;
+}
+
+
+/* Email subsection spacing */
+.email-subsection {
+  margin-bottom: 1rem;  /* Adds space after the email section */
+}
+
+/* Career subsection spacing */
+.career-subsection {
+  margin-top: 1rem;   /* Space before career section */
+  margin-bottom: 1rem;  /* Space after career section */
+}
+
+/* Social Media subsection spacing */
+.social-media-subsection {
+  margin-top: 1rem;   /* Space before social media section */
+}
+
+/* Adjust contact label spacing */
+.contact-label {
+  margin-top: 0.5rem;   /* Space above each label */
+  margin-bottom: 0.5rem;  /* Space below each label */
+  color: var(--accent-color);  /* Makes labels stand out more */
+}
+
+/* Adjust contact info row spacing */
+.contact-info-row {
+  margin-bottom: 0.5rem;  /* Space below email row */
 }
