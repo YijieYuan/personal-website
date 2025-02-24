@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess - Yijie Yuan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="chessboard.css">
+    <link rel="stylesheet" href="chess-game.css">
+</head>
+<body>
+    <header>
+        <nav class="header-nav">
+            <ul>
+                <li><a href="../../">home</a></li>
+                <li><a href="../../projects/">projects</a></li>
+                <li><a href="../">playground</a></li>
+                <li><a href="../../cv/">cv</a></li>
+            </ul>
+            <span class="last-updated">Last Updated: <span id="update-date"></span></span>
+        </nav>
+    </header>
+
+    <h1>Chess</h1>
+    
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div id="board"></div>
+            <div class="controls">
+                <button id="startBtn">Restart</button>
+                <button id="clearBtn">Clear</button>
+                <button id="flipBtn">Flip</button>
+                <button id="undoBtn">Undo</button>
+            </div>
+            <div class="ai-controls">
+                <label class="ai-toggle">
+                    <input type="checkbox" id="aiToggle" checked>
+                    AI Suggestions
+                </label>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="game-status">
+                <h2>Game Status</h2>
+                <div id="status" class="status-text">Ready</div>
+            </div>
+
+            <div class="ai-section">
+                <h2>AI Analysis</h2>
+                <div id="aiSuggestion" class="ai-suggestion"></div>
+                
+                <div class="prediction-section">
+                    <h3>Win Prediction</h3>
+                    <div class="prediction-container">
+                        <div class="prediction-row">
+                            <span class="side-label">White</span>
+                            <div class="prediction-bar">
+                                <div id="whiteBar" class="white-bar" style="width: 50%">50%</div>
+                            </div>
+                        </div>
+                        <div class="prediction-row">
+                            <span class="side-label">Black</span>
+                            <div class="prediction-bar">
+                                <div id="blackBar" class="black-bar" style="width: 50%">50%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="move-history">
+                <h2>Move History</h2>
+                <div id="pgn" class="history-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 Yijie Yuan.
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.js"></script>
+    <script src="chessboard.js"></script>
+    <script src="chess-game.js"></script>
+    <script>
+        document.getElementById("update-date").textContent = new Date(document.lastModified).toLocaleDateString();
+    </script>
+</body>
+</html>

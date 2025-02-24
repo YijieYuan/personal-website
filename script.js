@@ -9,4 +9,27 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   
 
-  
+async function updateLastModifiedDate() {
+  try {
+      // Get the current HTML file name
+      const pathArray = window.location.pathname.split('/');
+      const currentFile = pathArray[pathArray.length - 1] || 'index.html';
+      
+      // Read the file's metadata
+      const response = await window.fs.readFile(currentFile);
+      const lastModified = await window.fs.stat(currentFile);
+      
+      // Format the date
+      const date = new Date(lastModified.mtime);
+      const formattedDate = date.toLocaleDateString();
+      
+      // Update the element
+      document.getElementById('update-date').textContent = formattedDate;
+  } catch (error) {
+      console.error('Error getting file modification date:', error);
+      document.getElementById('update-date').textContent = 'Unknown';
+  }
+}
+
+// Call the function when the page loads
+updateLastModifiedDate();
