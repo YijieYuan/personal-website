@@ -26,12 +26,14 @@ h1 {
   gap: 20px;
 }
 
+/* Updated .board to use a fluid width and enforce aspect ratio */
 .board {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   grid-template-rows: repeat(10, 1fr);
-  width: 540px;
-  height: 600px;
+  width: 100%;
+  max-width: 540px;
+  aspect-ratio: 9 / 10;
   background: url("img/chessboard.png") no-repeat center center;
   background-size: contain;
   border: 2px solid #333;
@@ -218,6 +220,7 @@ h1 {
   white-space: pre-wrap;
 }
 
+/* Media queries */
 @media (max-width: 900px) {
   body {
     padding: 10px;
@@ -230,10 +233,6 @@ h1 {
   .game-container {
     width: 100%;
     max-width: 540px;
-  }
-  .board {
-    width: 100% !important;
-    height: auto !important;
   }
   .info-section {
     width: 100%;
