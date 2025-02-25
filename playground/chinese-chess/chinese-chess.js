@@ -1,418 +1,598 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const board = document.getElementById("xiangqi-board");
-    const moveLogElement = document.getElementById("move-log");
-    const turnIndicator = document.getElementById("turn-indicator");
-    const undoButton = document.getElementById("undoMove");
+/*************************************************************
+ * Xiangqi: Check/Checkmate logic with no king capture.
+ * - If you are in check, you must make a move that removes it.
+ * - Capturing the other King is disallowed (invalid move).
+ * - Game ends only by checkmate (one side cannot escape check).
+ ************************************************************/
 
-    // Global variables
-    let boardState = {};          // Maps "row,col" to the piece element on that cell.
-    let selectedPiece = null;     // Currently selected piece (if any)
-    let currentTurn = "r";        // 'r' (red) starts
-    let gameOver = false;         // When true, no further moves are allowed.
-    const cellSize = 60;
-    const boardOffsetX = 30;      // Adjust based on board’s actual graphic offset
-    const boardOffsetY = 30;
-    let moveLog = [];             // Array of move strings (last 10 moves)
-    let moveHistory = [];         // For undo functionality
+// DOM references
+const boardEl     = document.getElementById('board');
+const statusEl    = document.getElementById('status');
+const pgnEl       = document.getElementById('pgn');
+const undoBtn     = document.getElementById('undoBtn');
+const flipBtn     = document.getElementById('flipBtn');
+const clearBtn    = document.getElementById('clearBtn');
+const startBtn    = document.getElementById('startBtn');
+const applyAiBtn  = document.getElementById('applyAiBtn');
+const aiToggleEl  = document.getElementById('aiToggle');
 
-    // Starting position configuration (keys: "row,col" ; values: piece codes)
-    const startPosition = {
-        "0,0": "bR", "0,1": "bH", "0,2": "bE", "0,3": "bA", "0,4": "bK", "0,5": "bA", "0,6": "bE", "0,7": "bH", "0,8": "bR",
-        "2,1": "bC", "2,7": "bC",
-        "3,0": "bS", "3,2": "bS", "3,4": "bS", "3,6": "bS", "3,8": "bS",
-        "6,0": "rS", "6,2": "rS", "6,4": "rS", "6,6": "rS", "6,8": "rS",
-        "7,1": "rC", "7,7": "rC",
-        "9,0": "rR", "9,1": "rH", "9,2": "rE", "9,3": "rA", "9,4": "rK", "9,5": "rA", "9,6": "rE", "9,7": "rH", "9,8": "rR"
+// Game variables
+let boardState;
+let currentTurn   = 'red';        // 'red' or 'black'
+let selectedPiece = null;         // { x, y, pieceData }
+let moveLog       = [];
+let undoStack     = [];
+let boardFlipped  = false;
+let aiOn          = true;
+let gameOver      = false;        // once checkmate => no more moves
+
+// On load
+initGame();
+
+// ---------------------
+// MAIN INIT
+// ---------------------
+function initGame() {
+  boardState   = createInitialBoard();
+  currentTurn  = 'red';
+  selectedPiece= null;
+  moveLog      = [];
+  undoStack    = [];
+  boardFlipped = false;
+  gameOver     = false;
+
+  statusEl.textContent = 'Ready';
+  generateBoardIntersections();
+  renderBoard();
+  renderMoveLog();
+  updateWinPrediction(50, 50);
+}
+
+// Create standard Xiangqi layout
+function createInitialBoard() {
+  const newBoard = [];
+  for (let row = 0; row < 10; row++) {
+    const rowArr = Array(9).fill(null);
+    newBoard.push(rowArr);
+  }
+
+  // Red
+  newBoard[9][0] = { type: 'R', color: 'red' };
+  newBoard[9][8] = { type: 'R', color: 'red' };
+  newBoard[9][1] = { type: 'N', color: 'red' };
+  newBoard[9][7] = { type: 'N', color: 'red' };
+  newBoard[9][2] = { type: 'B', color: 'red' };
+  newBoard[9][6] = { type: 'B', color: 'red' };
+  newBoard[9][3] = { type: 'A', color: 'red' };
+  newBoard[9][5] = { type: 'A', color: 'red' };
+  newBoard[9][4] = { type: 'K', color: 'red' };
+  newBoard[7][1] = { type: 'C', color: 'red' };
+  newBoard[7][7] = { type: 'C', color: 'red' };
+  for (let x of [0, 2, 4, 6, 8]) {
+    newBoard[6][x] = { type: 'P', color: 'red' };
+  }
+
+  // Black
+  newBoard[0][0] = { type: 'R', color: 'black' };
+  newBoard[0][8] = { type: 'R', color: 'black' };
+  newBoard[0][1] = { type: 'N', color: 'black' };
+  newBoard[0][7] = { type: 'N', color: 'black' };
+  newBoard[0][2] = { type: 'B', color: 'black' };
+  newBoard[0][6] = { type: 'B', color: 'black' };
+  newBoard[0][3] = { type: 'A', color: 'black' };
+  newBoard[0][5] = { type: 'A', color: 'black' };
+  newBoard[0][4] = { type: 'K', color: 'black' };
+  newBoard[2][1] = { type: 'C', color: 'black' };
+  newBoard[2][7] = { type: 'C', color: 'black' };
+  for (let x of [0, 2, 4, 6, 8]) {
+    newBoard[3][x] = { type: 'P', color: 'black' };
+  }
+
+  return newBoard;
+}
+
+// Build 9×10 cells in the DOM
+function generateBoardIntersections() {
+  boardEl.innerHTML = '';
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 9; col++) {
+      const cell = document.createElement('div');
+      cell.className = 'intersection';
+
+      // Data for clicking
+      cell.dataset.x = col;
+      cell.dataset.y = row;
+
+      // Click => onCellClick
+      cell.addEventListener('click', () => {
+        onCellClick(col, row);
+      });
+
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+// Rerender all pieces
+function renderBoard() {
+  // Clear any child .piece elements
+  const cells = boardEl.querySelectorAll('.intersection');
+  cells.forEach(c => (c.innerHTML = ''));
+
+  // Place pieces in correct intersections
+  for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < 9; x++) {
+      const piece = boardState[y][x];
+      if (piece) {
+        // Find the correct cell DOM based on flip logic
+        const cell = getCellElement(x, y);
+        if (cell) {
+          const pieceEl = document.createElement('div');
+          pieceEl.classList.add('piece', piece.color);
+          pieceEl.textContent = getPieceText(piece);
+
+          // highlight if selected
+          if (
+            selectedPiece &&
+            selectedPiece.x === x &&
+            selectedPiece.y === y
+          ) {
+            pieceEl.classList.add('selected');
+          }
+
+          cell.appendChild(pieceEl);
+        }
+      }
+    }
+  }
+}
+
+// Return the cell DOM for the real board coordinate (x, y)
+function getCellElement(x, y) {
+  let dispX = x, dispY = y;
+  if (boardFlipped) {
+    dispX = 8 - x;
+    dispY = 9 - y;
+  }
+  const index = dispY * 9 + dispX; // row-major
+  return boardEl.children[index] || null;
+}
+
+// Convert a clicked cell's displayed row/col to real board coords
+function getRealCoords(clickedX, clickedY) {
+  if (!boardFlipped) {
+    return { realX: clickedX, realY: clickedY };
+  } else {
+    return {
+      realX: 8 - clickedX,
+      realY: 9 - clickedY
     };
+  }
+}
 
-    const pieceNames = {
-        bR: "车", bH: "马", bE: "象", bA: "士", bK: "将", bC: "炮", bS: "卒",
-        rR: "车", rH: "马", rE: "相", rA: "仕", rK: "帅", rC: "炮", rS: "兵"
-    };
+// Clicking a cell
+function onCellClick(dispX, dispY) {
+  // No moves allowed if game is over
+  if (gameOver) return;
 
-    // Initialize board with pieces – create DOM elements and record their positions.
-    for (let key in startPosition) {
-        const [row, col] = key.split(",").map(Number);
-        const code = startPosition[key];
-        const piece = document.createElement("div");
-        piece.classList.add("piece", code.startsWith("b") ? "black" : "red");
-        piece.textContent = pieceNames[code];
-        piece.dataset.row = row;
-        piece.dataset.col = col;
-        piece.dataset.code = code;
-        piece.dataset.color = code[0];
-        piece.dataset.type = code.substring(1);
-        piece.style.top = `${row * cellSize + boardOffsetY}px`;
-        piece.style.left = `${col * cellSize + boardOffsetX}px`;
-        board.appendChild(piece);
-        boardState[`${row},${col}`] = piece;
+  const { realX, realY } = getRealCoords(dispX, dispY);
+
+  // If no piece is selected
+  if (!selectedPiece) {
+    const piece = boardState[realY][realX];
+    if (piece && piece.color === currentTurn) {
+      selectedPiece = { x: realX, y: realY, pieceData: piece };
+      renderBoard();
     }
+    return;
+  }
 
-    // Helper functions for selecting and deselecting pieces with proper color outlines.
-    function selectPiece(piece) {
-        piece.classList.add("selected");
-        // if (piece.dataset.color === "r") {
-            // piece.style.outline = "2px solid red";
-        // } else {
-            // piece.style.outline = "2px solid black";
-        // }
-    }
-    function deselectPiece(piece) {
-        piece.classList.remove("selected");
-        piece.style.outline = "";
-    }
+  // If already selected a piece
+  const { x: sx, y: sy, pieceData: sp } = selectedPiece;
+  const targetPiece = boardState[realY][realX];
 
-    // Update the turn indicator.
-    function updateTurnIndicator() {
-        if (!gameOver) {
-            turnIndicator.textContent = "Current Turn: " + (currentTurn === "r" ? "Red" : "Black");
+  // If we clicked same-color piece => reselect
+  if (targetPiece && targetPiece.color === sp.color) {
+    selectedPiece = { x: realX, y: realY, pieceData: targetPiece };
+    renderBoard();
+    return;
+  }
+
+  // Otherwise, attempt move
+  attemptMove(sx, sy, realX, realY);
+}
+
+// Attempt move from (sx, sy) => (tx, ty)
+function attemptMove(sx, sy, tx, ty) {
+  if (!isValidMove(sx, sy, tx, ty)) {
+    // invalid => deselect
+    selectedPiece = null;
+    renderBoard();
+    return;
+  }
+
+  // Save for undo
+  undoStack.push(JSON.parse(JSON.stringify(boardState)));
+
+  // Make the move
+  boardState[ty][tx] = boardState[sy][sx];
+  boardState[sy][sx] = null;
+
+  const movedPiece = boardState[ty][tx];
+  const moveStr = `${movedPiece.color} ${getPieceText(movedPiece)}: (${sx},${sy}) -> (${tx},${ty})`;
+  moveLog.push(moveStr);
+  renderMoveLog();
+  updateStatus(`Moved: ${moveStr}`);
+
+  // Switch turn
+  const moverColor = currentTurn;
+  currentTurn = moverColor === 'red' ? 'black' : 'red';
+
+  // Deselect
+  selectedPiece = null;
+  renderBoard();
+
+  // After the move, check if new side is in checkmate
+  checkForCheckmate(moverColor);
+}
+
+// If the new side to move is in check and cannot escape => checkmate
+function checkForCheckmate(moverColor) {
+  if (gameOver) return;
+
+  const sideToMove = currentTurn;
+  if (!isInCheck(sideToMove)) {
+    return; // not in check => no mate
+  }
+
+  // if side is in check => see if there's any legal move to escape
+  if (canSideMove(sideToMove)) {
+    updateStatus('Check!');
+  } else {
+    gameOver = true;
+    updateStatus(`Checkmate: ${moverColor} wins!`);
+    if (moverColor === 'red') {
+      updateWinPrediction(100, 0);
+    } else {
+      updateWinPrediction(0, 100);
+    }
+  }
+}
+
+// King location
+function findKing(color) {
+  for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < 9; x++) {
+      const p = boardState[y][x];
+      if (p && p.type === 'K' && p.color === color) {
+        return { kx: x, ky: y };
+      }
+    }
+  }
+  // If no king => let's return -1
+  return { kx: -1, ky: -1 };
+}
+
+// Is color's King in check?
+function isInCheck(color) {
+  const oppColor = color === 'red' ? 'black' : 'red';
+  const { kx, ky } = findKing(color);
+  if (kx < 0) {
+    // no king found => typically means not in check, but game is basically broken
+    return false;
+  }
+  // If any opponent piece can move to (kx, ky), it's a check
+  for (let sy = 0; sy < 10; sy++) {
+    for (let sx = 0; sx < 9; sx++) {
+      const piece = boardState[sy][sx];
+      if (piece && piece.color === oppColor) {
+        if (basicMovementCheck(sx, sy, kx, ky, piece)) {
+          // Must do the hypothetical move check for that side, but that’s 
+          // for your side. For checking if “any opp piece can capture king,”
+          // we can skip the self-check logic. Just see if it’s physically possible
+          // ignoring “king can’t be captured.” 
+          if (noBlockOrCannonCheck(sx, sy, kx, ky, piece)) {
+            return true;
+          }
         }
+      }
     }
-    updateTurnIndicator();
+  }
+  return false;
+}
 
-    // Returns true if the two kings are on the same column with no intervening pieces.
-    function kingsFacing() {
-        let redKingPos = null, blackKingPos = null;
-        for (let key in boardState) {
-            const p = boardState[key];
-            if (p.dataset.code === "rK") {
-                redKingPos = { row: parseInt(p.dataset.row), col: parseInt(p.dataset.col) };
-            }
-            if (p.dataset.code === "bK") {
-                blackKingPos = { row: parseInt(p.dataset.row), col: parseInt(p.dataset.col) };
-            }
-        }
-        if (redKingPos && blackKingPos && redKingPos.col === blackKingPos.col) {
-            let col = redKingPos.col;
-            let startRow = Math.min(redKingPos.row, blackKingPos.row);
-            let endRow = Math.max(redKingPos.row, blackKingPos.row);
-            for (let r = startRow + 1; r < endRow; r++) {
-                if (boardState[`${r},${col}`]) {
-                    return false;
-                }
-            }
-            return true; // Illegal: kings face each other.
-        }
-        return false;
-    }
-
-    // Validate moves based on piece type and basic Xiangqi rules.
-    function validMove(piece, fromRow, fromCol, toRow, toCol) {
-        const code = piece.dataset.code; // e.g. "rK"
-        const color = code[0];
-        const type = code.substring(1);  // "K", "R", "H", "E", "A", "C", "S"
-        if (fromRow === toRow && fromCol === toCol) return false;
-        // Cannot land on a piece of the same color.
-        const destPiece = boardState[`${toRow},${toCol}`];
-        if (destPiece && destPiece.dataset.color === color) return false;
-
-        const deltaRow = toRow - fromRow;
-        const deltaCol = toCol - fromCol;
-
-        switch (type) {
-            case "K":
-                // King: one step orthogonally inside the palace.
-                if (Math.abs(deltaRow) + Math.abs(deltaCol) !== 1) return false;
-                if (color === "r") {
-                    if (toRow < 7 || toRow > 9 || toCol < 3 || toCol > 5) return false;
-                } else {
-                    if (toRow < 0 || toRow > 2 || toCol < 3 || toCol > 5) return false;
-                }
+/*
+  canSideMove(color): tries every piece and every possible target.
+  If any valid move is found that ends up not in check => return true
+*/
+function canSideMove(color) {
+  for (let sy = 0; sy < 10; sy++) {
+    for (let sx = 0; sx < 9; sx++) {
+      const piece = boardState[sy][sx];
+      if (piece && piece.color === color) {
+        for (let ty = 0; ty < 10; ty++) {
+          for (let tx = 0; tx < 9; tx++) {
+            if (sx !== tx || sy !== ty) {
+              if (isValidMove(sx, sy, tx, ty)) {
                 return true;
-            case "A":
-                // Advisor: moves one step diagonally within the palace.
-                if (Math.abs(deltaRow) !== 1 || Math.abs(deltaCol) !== 1) return false;
-                if (color === "r") {
-                    if (toRow < 7 || toRow > 9 || toCol < 3 || toCol > 5) return false;
-                } else {
-                    if (toRow < 0 || toRow > 2 || toCol < 3 || toCol > 5) return false;
-                }
-                return true;
-            case "E":
-                // Elephant: moves two steps diagonally; its “eye” (midpoint) must be empty.
-                // Also cannot cross the river.
-                if (Math.abs(deltaRow) !== 2 || Math.abs(deltaCol) !== 2) return false;
-                const midRow = fromRow + deltaRow / 2;
-                const midCol = fromCol + deltaCol / 2;
-                if (boardState[`${midRow},${midCol}`]) return false;
-                if (color === "r") {
-                    if (toRow < 5) return false; // red elephant may not cross the river.
-                } else {
-                    if (toRow > 4) return false; // black elephant may not cross.
-                }
-                return true;
-            case "H":
-                // Horse: moves in an L-shape; check for “leg” blocking.
-                if (!((Math.abs(deltaRow) === 2 && Math.abs(deltaCol) === 1) ||
-                      (Math.abs(deltaRow) === 1 && Math.abs(deltaCol) === 2))) return false;
-                if (Math.abs(deltaRow) === 2) {
-                    const blockRow = fromRow + deltaRow / 2;
-                    const blockCol = fromCol;
-                    if (boardState[`${blockRow},${blockCol}`]) return false;
-                } else {
-                    const blockRow = fromRow;
-                    const blockCol = fromCol + deltaCol / 2;
-                    if (boardState[`${blockRow},${blockCol}`]) return false;
-                }
-                return true;
-            case "R":
-                // Chariot: moves in a straight line (horizontally or vertically) with no blocking pieces.
-                if (deltaRow !== 0 && deltaCol !== 0) return false;
-                if (deltaRow === 0) {
-                    const step = deltaCol > 0 ? 1 : -1;
-                    for (let c = fromCol + step; c !== toCol; c += step) {
-                        if (boardState[`${fromRow},${c}`]) return false;
-                    }
-                } else {
-                    const step = deltaRow > 0 ? 1 : -1;
-                    for (let r = fromRow + step; r !== toRow; r += step) {
-                        if (boardState[`${r},${fromCol}`]) return false;
-                    }
-                }
-                return true;
-            case "C":
-                // Cannon: moves like the chariot, but for capturing must jump exactly one piece.
-                if (deltaRow !== 0 && deltaCol !== 0) return false;
-                let count = 0;
-                if (deltaRow === 0) {
-                    const step = deltaCol > 0 ? 1 : -1;
-                    for (let c = fromCol + step; c !== toCol; c += step) {
-                        if (boardState[`${fromRow},${c}`]) count++;
-                    }
-                } else {
-                    const step = deltaRow > 0 ? 1 : -1;
-                    for (let r = fromRow + step; r !== toRow; r += step) {
-                        if (boardState[`${r},${fromCol}`]) count++;
-                    }
-                }
-                if (destPiece) {
-                    return count === 1;
-                } else {
-                    return count === 0;
-                }
-            case "S":
-                // Soldier: moves one step forward. After crossing the river it can also move horizontally.
-                if (color === "r") {
-                    if (fromRow >= 5) {
-                        // Not crossed river: only move forward (upward → row - 1)
-                        return deltaRow === -1 && deltaCol === 0;
-                    } else {
-                        // After crossing: forward or sideways.
-                        return (deltaRow === -1 && deltaCol === 0) || (deltaRow === 0 && Math.abs(deltaCol) === 1);
-                    }
-                } else {
-                    if (fromRow <= 4) {
-                        return deltaRow === 1 && deltaCol === 0;
-                    } else {
-                        return (deltaRow === 1 && deltaCol === 0) || (deltaRow === 0 && Math.abs(deltaCol) === 1);
-                    }
-                }
-            default:
-                return false;
-        }
-    }
-
-    // Record a move (as a string) for the move log.
-    function recordMove(piece, fromRow, fromCol, toRow, toCol, capturedPiece) {
-        let moveText = (piece.dataset.color === "r" ? "Red" : "Black") + " " + piece.textContent;
-        moveText += `: (${fromRow},${fromCol}) → (${toRow},${toCol})`;
-        if (capturedPiece) {
-            moveText += `  x ${capturedPiece.textContent}`;
-        }
-        moveLog.push(moveText);
-        if (moveLog.length > 10) {
-            moveLog.shift();
-        }
-        updateMoveLog();
-    }
-
-    // Update the move log panel.
-    function updateMoveLog() {
-        moveLogElement.innerHTML = "";
-        moveLog.forEach(function (move) {
-            const li = document.createElement("li");
-            li.textContent = move;
-            moveLogElement.appendChild(li);
-        });
-    }
-
-    // Attempt to move the currently selected piece to the given grid cell.
-    function attemptMove(piece, toRow, toCol) {
-        // Prevent any further moves if the game is over.
-        if (gameOver) {
-            return;
-        }
-        const fromRow = parseInt(piece.dataset.row);
-        const fromCol = parseInt(piece.dataset.col);
-
-        // Validate the move per piece rules.
-        if (!validMove(piece, fromRow, fromCol, toRow, toCol)) {
-            return;
-        }
-
-        // Save current style and state (for undo).
-        const oldTop = piece.style.top;
-        const oldLeft = piece.style.left;
-        const capturedPiece = boardState[`${toRow},${toCol}`] || null;
-
-        // If a piece is captured, remove it from play.
-        if (capturedPiece) {
-            delete boardState[`${toRow},${toCol}`];
-            capturedPiece.style.display = "none";
-        }
-
-        // Remove the moving piece from its old position.
-        delete boardState[`${fromRow},${fromCol}`];
-
-        // Update the piece’s DOM position and dataset.
-        piece.style.top = `${toRow * cellSize + boardOffsetY}px`;
-        piece.style.left = `${toCol * cellSize + boardOffsetX}px`;
-        piece.dataset.row = toRow;
-        piece.dataset.col = toCol;
-        boardState[`${toRow},${toCol}`] = piece;
-
-        // Check if the move causes the two kings to face each other (illegal).
-        if (kingsFacing()) {
-            // Revert the move.
-            piece.style.top = oldTop;
-            piece.style.left = oldLeft;
-            piece.dataset.row = fromRow;
-            piece.dataset.col = fromCol;
-            boardState[`${fromRow},${fromCol}`] = piece;
-            if (capturedPiece) {
-                boardState[`${toRow},${toCol}`] = capturedPiece;
-                capturedPiece.style.display = "block";
+              }
             }
-            return;
+          }
         }
-
-        // Save move details for undo (store the current turn as prevTurn).
-        moveHistory.push({
-            piece: piece,
-            fromRow: fromRow,
-            fromCol: fromCol,
-            toRow: toRow,
-            toCol: toCol,
-            captured: capturedPiece,
-            oldTop: oldTop,
-            oldLeft: oldLeft,
-            prevTurn: currentTurn
-        });
-
-        // Record the move in the log.
-        recordMove(piece, fromRow, fromCol, toRow, toCol, capturedPiece);
-
-        // Check for game over if a king was captured.
-        if (capturedPiece && (capturedPiece.dataset.code === "rK" || capturedPiece.dataset.code === "bK")) {
-            const winner = capturedPiece.dataset.code === "rK" ? "Black" : "Red";
-            moveLog.push(`Game Over: ${winner} wins!`);
-            if (moveLog.length > 10) moveLog.shift();
-            updateMoveLog();
-            gameOver = true;
-            turnIndicator.textContent = `Game Over: ${winner} wins!`;
-            // Do not switch turn after game over.
-            return;
-        }
-
-        // Deselect the piece.
-        deselectPiece(piece);
-        selectedPiece = null;
-
-        // Switch turn (for a normal move, set to the opposite side).
-        currentTurn = currentTurn === "r" ? "b" : "r";
-        updateTurnIndicator();
+      }
     }
+  }
+  return false;
+}
 
-    // The board’s click handler manages both selection and move attempts.
-    board.addEventListener("click", function (event) {
-        // Ignore board clicks if the game is over.
-        if (gameOver) {
-            return;
-        }
-        const rect = board.getBoundingClientRect();
-        const clickX = event.clientX - rect.left;
-        const clickY = event.clientY - rect.top;
-        // Use a centered calculation to expand the clickable area.
-        const gridCol = Math.floor((clickX - boardOffsetX + cellSize / 2) / cellSize);
-        const gridRow = Math.floor((clickY - boardOffsetY + cellSize / 2) / cellSize);
+/*
+  isValidMove(sx, sy, tx, ty):
+    1) Basic Xiangqi movement check
+    2) Disallow capturing the other King
+    3) Hypothetical move => if you're still in check => invalid
+*/
+function isValidMove(sx, sy, tx, ty) {
+  if (gameOver) return false;
+  const piece = boardState[sy][sx];
+  if (!piece) return false;
 
-        // Boundary check: ensure the click is within the board limits.
-        if (gridRow < 0 || gridRow >= 10 || gridCol < 0 || gridCol >= 9) {
-            return;
-        }
+  const target = boardState[ty][tx];
+  // No capturing own color
+  if (target && target.color === piece.color) {
+    return false;
+  }
+  // Disallow capturing the other King
+  if (target && target.type === 'K') {
+    return false;
+  }
 
-        if (event.target.classList.contains("piece")) {
-            // Clicked directly on a piece.
-            if (!selectedPiece) {
-                // If no piece is selected, select this one if it belongs to the current turn.
-                if (event.target.dataset.color === currentTurn) {
-                    selectedPiece = event.target;
-                    selectPiece(selectedPiece);
-                }
-            } else {
-                if (event.target === selectedPiece) {
-                    // Deselect if clicking the same piece.
-                    deselectPiece(selectedPiece);
-                    selectedPiece = null;
-                } else if (event.target.dataset.color === currentTurn) {
-                    // Switch selection to a different friendly piece.
-                    deselectPiece(selectedPiece);
-                    selectedPiece = event.target;
-                    selectPiece(selectedPiece);
-                } else {
-                    // If an enemy piece is clicked, attempt a capture by moving to its cell.
-                    const destRow = parseInt(event.target.dataset.row);
-                    const destCol = parseInt(event.target.dataset.col);
-                    attemptMove(selectedPiece, destRow, destCol);
-                }
-            }
+  // Step 1: Basic movement pattern
+  if (!basicMovementCheck(sx, sy, tx, ty, piece)) {
+    return false;
+  }
+  // Step 2: If it’s a Rook/Cannon, ensure no block in path, etc.
+  if (!noBlockOrCannonCheck(sx, sy, tx, ty, piece)) {
+    return false;
+  }
+
+  // Step 3: Hypothetically make the move => see if I'm still in check
+  // (i.e. you can't move in a way that doesn't fix your own check).
+  const saved = boardState[ty][tx];
+  boardState[ty][tx] = piece;
+  boardState[sy][sx] = null;
+
+  const stillInCheck = isInCheck(piece.color);
+
+  // revert
+  boardState[sy][sx] = piece;
+  boardState[ty][tx] = saved;
+
+  if (stillInCheck) {
+    return false;
+  }
+
+  return true;
+}
+
+/* 
+  Basic Xiangqi movement check ignoring block/cannon logic:
+  returns true if piece’s pattern is correct.
+*/
+function basicMovementCheck(sx, sy, tx, ty, piece) {
+  const dx = tx - sx;
+  const dy = ty - sy;
+  const adx = Math.abs(dx);
+  const ady = Math.abs(dy);
+
+  switch (piece.type) {
+    case 'R': // Rook
+      // must be straight line
+      return (dx === 0 || dy === 0);
+    case 'N': // Knight
+      return ((adx === 2 && ady === 1) || (adx === 1 && ady === 2));
+    case 'B': // Bishop
+      if (adx !== 2 || ady !== 2) return false;
+      // can’t cross river
+      if (piece.color === 'red' && ty < 5) return false;
+      if (piece.color === 'black' && ty > 4) return false;
+      return true;
+    case 'A': // Advisor
+      if (adx !== 1 || ady !== 1) return false;
+      return inPalace(tx, ty, piece.color);
+    case 'K': // King
+      // 1 step orth only
+      if (!((adx === 1 && ady === 0) || (adx === 0 && ady === 1))) return false;
+      return inPalace(tx, ty, piece.color);
+    case 'C': // Cannon => pattern same as Rook for movement
+      return (dx === 0 || dy === 0);
+    case 'P': // Pawn
+      if (piece.color === 'red') {
+        if (sy > 4) {
+          // not crossed => only forward
+          return (dx === 0 && dy === -1);
         } else {
-            // Clicked on an empty spot: if a piece is selected, try to move it there.
-            if (selectedPiece) {
-                attemptMove(selectedPiece, gridRow, gridCol);
-            }
+          // crossed => forward or sideways
+          return (
+            (dx === 0 && dy === -1) ||
+            (Math.abs(dx) === 1 && dy === 0)
+          );
         }
-    });
-
-    // Undo button: reverts the last move (even if game is over).
-    undoButton.addEventListener("click", function () {
-        if (moveHistory.length === 0) return;
-        const lastMove = moveHistory.pop();
-
-        // If the undone move was a winning move, remove both the winning move and the extra game-over message.
-        if (lastMove.captured && (lastMove.captured.dataset.code === "rK" || lastMove.captured.dataset.code === "bK")) {
-            moveLog.pop(); // Remove game-over message.
-            moveLog.pop(); // Remove the winning move record.
+      } else {
+        // black
+        if (sy < 5) {
+          return (dx === 0 && dy === 1);
         } else {
-            moveLog.pop();
+          return (
+            (dx === 0 && dy === 1) ||
+            (Math.abs(dx) === 1 && dy === 0)
+          );
         }
-        updateMoveLog();
+      }
+  }
+  return false;
+}
 
-        // Revert the move.
-        delete boardState[`${lastMove.toRow},${lastMove.toCol}`];
-        lastMove.piece.style.top = lastMove.oldTop;
-        lastMove.piece.style.left = lastMove.oldLeft;
-        lastMove.piece.dataset.row = lastMove.fromRow;
-        lastMove.piece.dataset.col = lastMove.fromCol;
-        boardState[`${lastMove.fromRow},${lastMove.fromCol}`] = lastMove.piece;
+/* 
+  noBlockOrCannonCheck(sx, sy, tx, ty, piece):
+  - For Rook, ensure no pieces in path
+  - For Cannon, ensure path is clear if non-capture, exactly 1 piece if capture
+*/
+function noBlockOrCannonCheck(sx, sy, tx, ty, piece) {
+  if (piece.type === 'R' || piece.type === 'C') {
+    // must check how many pieces between
+    const betweenCount = countPiecesBetween(sx, sy, tx, ty);
+    if (piece.type === 'R') {
+      // Rook => must be 0 between
+      if (betweenCount !== 0) return false;
+    } else {
+      // Cannon => if capturing => 1 in between, else 0
+      const target = boardState[ty][tx];
+      if (target) {
+        // capture => must have exactly 1 piece in between
+        if (betweenCount !== 1) return false;
+      } else {
+        // not capture => 0 pieces in between
+        if (betweenCount !== 0) return false;
+      }
+    }
+  } else if (piece.type === 'N') {
+    // Knight block check
+    const dx = tx - sx;
+    const dy = ty - sy;
+    if (Math.abs(dx) === 2) {
+      const blockX = sx + dx / 2;
+      if (boardState[sy][blockX]) return false;
+    } else {
+      const blockY = sy + dy / 2;
+      if (boardState[blockY][sx]) return false;
+    }
+  } else if (piece.type === 'B') {
+    // Bishop => check the center
+    const dx = tx - sx;
+    const dy = ty - sy;
+    if (boardState[sy + dy/2][sx + dx/2]) return false;
+  }
+  return true;
+}
 
-        // If a piece was captured, restore it.
-        if (lastMove.captured) {
-            lastMove.captured.style.display = "block";
-            boardState[`${lastMove.toRow},${lastMove.toCol}`] = lastMove.captured;
-            // If a king was captured in that move, undo game over.
-            if (lastMove.captured.dataset.code === "rK" || lastMove.captured.dataset.code === "bK") {
-                gameOver = false;
-                updateTurnIndicator();
-            }
-        }
-        // Restore the previous turn from before the move was made.
-        currentTurn = lastMove.prevTurn;
-        updateTurnIndicator();
-    });
+// Rook/Cannon path piece counting
+function countPiecesBetween(sx, sy, tx, ty) {
+  let count = 0;
+  if (sx === tx) {
+    let step = (ty > sy) ? 1 : -1;
+    for (let y = sy + step; y !== ty; y += step) {
+      if (boardState[y][sx]) count++;
+    }
+  } else if (sy === ty) {
+    let step = (tx > sx) ? 1 : -1;
+    for (let x = sx + step; x !== tx; x += step) {
+      if (boardState[sy][x]) count++;
+    }
+  }
+  return count;
+}
 
-    // Reset button: simply reloads the page.
-    document.getElementById("resetBoard").addEventListener("click", function () {
-        location.reload();
-    });
+function inPalace(x, y, color) {
+  if (color === 'red') {
+    return (x >= 3 && x <= 5 && y >= 7 && y <= 9);
+  } else {
+    return (x >= 3 && x <= 5 && y >= 0 && y <= 2);
+  }
+}
+
+// --------------
+// BUTTON HANDLERS
+// --------------
+undoBtn.addEventListener('click', () => {
+  // Undo is allowed even if checkmate
+  if (undoStack.length > 0) {
+    boardState = undoStack.pop();
+    if (moveLog.length > 0) {
+      moveLog.pop();
+    }
+    currentTurn = (currentTurn === 'red') ? 'black' : 'red';
+    selectedPiece = null;
+    gameOver = false; // re-open the game
+    updateStatus('Undid last move.');
+    renderBoard();
+    renderMoveLog();
+  } else {
+    updateStatus('No moves to undo.');
+  }
 });
+
+flipBtn.addEventListener('click', () => {
+  boardFlipped = !boardFlipped;
+  renderBoard();
+  updateStatus(boardFlipped ? 'Board flipped.' : 'Board unflipped.');
+});
+
+clearBtn.addEventListener('click', () => {
+  undoStack.push(JSON.parse(JSON.stringify(boardState)));
+  // Remove all pieces
+  for (let y = 0; y < 10; y++) {
+    for (let x = 0; x < 9; x++) {
+      boardState[y][x] = null;
+    }
+  }
+  moveLog.push('*** Cleared board ***');
+  renderMoveLog();
+  selectedPiece = null;
+  gameOver = false; // can keep playing on an empty board
+  updateStatus('Board cleared.');
+  renderBoard();
+});
+
+startBtn.addEventListener('click', () => {
+  initGame();
+  updateStatus('Game restarted.');
+});
+
+applyAiBtn.addEventListener('click', () => {
+  alert('AI not implemented yet.');
+});
+
+aiToggleEl.addEventListener('change', (e) => {
+  aiOn = e.target.checked;
+  document.getElementById('aiSuggestion').textContent = aiOn
+    ? 'AI suggestions ON (placeholder)'
+    : 'AI suggestions OFF';
+});
+
+// ---------------------------
+// UTILITY
+// ---------------------------
+function updateStatus(msg) {
+  statusEl.textContent = msg;
+}
+
+function renderMoveLog() {
+  const maxMoves = 50;
+  const startIndex = Math.max(0, moveLog.length - maxMoves);
+  const recentMoves = moveLog.slice(startIndex);
+  pgnEl.textContent = recentMoves.join('\n');
+}
+
+// For the “Win Prediction” bars
+function updateWinPrediction(redPercent, blackPercent) {
+  const redBar = document.getElementById('whiteBar');
+  const blkBar = document.getElementById('blackBar');
+  redBar.style.width = redPercent + '%';
+  redBar.textContent = redPercent + '%';
+  blkBar.style.width = blackPercent + '%';
+  blkBar.textContent = blackPercent + '%';
+}
+
+// Convert piece type -> Chinese char
+function getPieceText({ type, color }) {
+  switch (type) {
+    case 'R': return '車';
+    case 'N': return '馬';
+    case 'B': return color === 'red' ? '相' : '象';
+    case 'A': return color === 'red' ? '仕' : '士';
+    case 'K': return color === 'red' ? '帥' : '將';
+    case 'C': return color === 'red' ? '炮' : '砲';
+    case 'P': return color === 'red' ? '兵' : '卒';
+  }
+  return '?';
+}
