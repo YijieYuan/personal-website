@@ -1,265 +1,252 @@
-/* ------------------------------------------------------------------
-   Layout from your standard chess page, adapted for Xiangqi
------------------------------------------------------------------- */
+/* Basic layout adapted to Xiangqi with a 9x10 grid */
 
 body {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  margin: 20px 0;
+}
+
+.game-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  margin: 20px auto;
+  max-width: 900px;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  width: 540px;
+  height: 600px;
+  background: url("img/chessboard.png") no-repeat center center;
+  background-size: contain;
+  border: 2px solid #333;
+  position: relative;
+}
+
+.intersection {
+  position: relative;
+  cursor: pointer;
+}
+
+.piece {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 45px;
+  border: 2px solid;
+  background: #fff;
+  z-index: 10;
+}
+
+.piece.red {
+  color: red;
+  border-color: red;
+}
+.piece.black {
+  color: black;
+  border-color: black;
+}
+
+.piece.selected.red {
+  box-shadow: 0 0 5px rgba(255, 0, 0, 0.8), 0 0 10px rgba(255, 0, 0, 0.5);
+}
+.piece.selected.black {
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.controls button {
+  background: #4a76a8;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 16px;
+  transition: all 0.2s;
+  min-width: 90px;
+}
+.controls button:hover {
+  opacity: 0.9;
+}
+
+.ai-controls {
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+  max-width: 540px;
+}
+.ai-toggle {
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.info-section {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.info-section h2 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #4a76a8;
+  font-weight: bold;
+}
+.info-section h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.game-status {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.status-text {
+  font-size: 14px;
+  color: #333;
+}
+
+.ai-section {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.ai-suggestion {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-family: "Source Code Pro", monospace;
+  font-size: 14px;
+}
+
+.prediction-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.prediction-row {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+.side-label {
+  font-size: 14px;
+  color: #666;
+}
+.prediction-bar {
+  height: 20px;
+  background: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.white-bar,
+.black-bar {
+  height: 100%;
+  color: white;
+  text-align: right;
+  padding-right: 8px;
+  font-size: 12px;
+  line-height: 20px;
+  transition: width 0.3s ease;
+}
+.white-bar {
+  background: #4a76a8;
+}
+.black-bar {
+  background: #333;
+}
+
+.move-history {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  flex-grow: 1;
+}
+.history-text {
+  font-family: "Source Code Pro", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  height: 180px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 10px;
   }
-  
-  h1 {
-    margin: 20px 0;
-  }
-  
   .game-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 40px;
-    margin: 20px auto;
-    max-width: 900px;
-  }
-  
-  .game-container {
-    display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
   }
-  
-  /* The board: 9 columns × 10 rows of "intersection" cells */
-  .board {
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    grid-template-rows: repeat(10, 1fr);
-    width: 540px;
-    height: 600px;
-    background: url("img/chessboard.png") no-repeat center center;
-    background-size: contain;
-    border: 2px solid #333;
-    position: relative;
-  }
-  
-  .intersection {
-    position: relative; /* so we can absolutely position a .piece inside */
-    cursor: pointer;
-  }
-  
-  /* Pieces (Red/Black) absolutely centered inside the cell */
-  .piece {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  
-    width: 45px;
-    height: 45px;
-    border-radius: 50%;
-    font-size: 20px;
-    font-weight: bold;
-    text-align: center;
-    line-height: 45px;
-    border: 2px solid;
-    background: #fff;
-    z-index: 10;
-  }
-  
-  .piece.red {
-    color: red;
-    border-color: red;
-  }
-  .piece.black {
-    color: black;
-    border-color: black;
-  }
-  
-  /* Selected highlight */
-  .piece.selected.red {
-    box-shadow: 0 0 5px rgba(255, 0, 0, 0.8), 0 0 10px rgba(255, 0, 0, 0.5);
-  }
-  .piece.selected.black {
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.5);
-  }
-  
-  /* Controls (Restart, Clear, Flip, Undo, etc.) */
-  .controls {
-    display: flex;
-    gap: 12px;
+  .game-container {
     width: 100%;
-    justify-content: center;
-  }
-  
-  .controls button {
-    background: #4a76a8;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 14px;
-    padding: 8px 16px;
-    transition: all 0.2s;
-    min-width: 90px;
-  }
-  .controls button:hover {
-    opacity: 0.9;
-  }
-  
-  /* AI toggle box */
-  .ai-controls {
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    width: 100%;
-    text-align: center;
     max-width: 540px;
   }
-  .ai-toggle {
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
+  .board {
+    width: 100% !important;
+    height: auto !important;
   }
-  
-  /* Right info panel */
   .info-section {
-    width: 300px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    width: 100%;
+    max-width: 540px;
   }
-  
-  .info-section h2 {
-    margin: 0 0 12px 0;
-    font-size: 16px;
-    color: #4a76a8;
-    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .controls {
+    flex-wrap: wrap;
   }
-  .info-section h3 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    color: #333;
+  .controls button {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
   }
-  
-  .game-status {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  .status-text {
-    font-size: 14px;
-    color: #333;
-  }
-  
-  .ai-section {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  .ai-suggestion {
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-family: "Source Code Pro", monospace;
-    font-size: 14px;
-  }
-  
-  /* Prediction bars */
-  .prediction-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .prediction-row {
-    display: grid;
-    grid-template-columns: 60px 1fr;
-    align-items: center;
-    gap: 8px;
-  }
-  .side-label {
-    font-size: 14px;
-    color: #666;
-  }
-  .prediction-bar {
-    height: 20px;
-    background: #eee;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .white-bar, .black-bar {
-    height: 100%;
-    color: white;
-    text-align: right;
-    padding-right: 8px;
-    font-size: 12px;
-    line-height: 20px;
-    transition: width 0.3s ease;
-  }
-  .white-bar {
-    background: #4a76a8;
-  }
-  .black-bar {
-    background: #333;
-  }
-  
-  /* Move history */
-  .move-history {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    flex-grow: 1;
-  }
-  .history-text {
-    font-family: "Source Code Pro", monospace;
-    font-size: 14px;
-    line-height: 1.5;
-    background: #f8f9fa;
-    padding: 12px;
-    border-radius: 6px;
-    height: 180px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-  }
-  
-  /* Responsive design */
-  @media (max-width: 900px) {
-    body {
-      padding: 10px;
-    }
-    .game-wrapper {
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
-    .game-container {
-      width: 100%;
-      max-width: 540px;
-    }
-    .board {
-      width: 100% !important;
-      height: auto !important;
-    }
-    .info-section {
-      width: 100%;
-      max-width: 540px;
-    }
-  }
-  
-  @media (max-width: 600px) {
-    .controls {
-      flex-wrap: wrap;
-    }
-    .controls button {
-      flex: 1 1 calc(50% - 6px);
-      min-width: 0;
-    }
-  }
-  
+}
