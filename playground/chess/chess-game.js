@@ -36,7 +36,7 @@ window.onload = function() {
             parseEngineMessage(e.data);
         };
 
-        // Let’s tell Stockfish to use UCI
+        // Let's tell Stockfish to use UCI
         engine.postMessage('uci');
         engine.postMessage('ucinewgame');
         engine.postMessage('isready'); // once we get 'readyok' => engineReady = true
@@ -221,12 +221,18 @@ window.onload = function() {
         // bestMove is something like "e2e4"
         const from = bestMove.substring(0, 2);
         const to   = bestMove.substring(2, 4);
+        
+        // Promotion if needed (bestMove will be e.g. "e7e8q")
+        let promotion = undefined;
+        if (bestMove.length > 4) {
+            promotion = bestMove.substring(4, 5);
+        }
 
         // Attempt the move
         const moveObj = game.move({
             from: from,
             to: to,
-            promotion: 'q'
+            promotion: promotion || 'q'
         });
 
         if (moveObj === null) {
@@ -234,12 +240,9 @@ window.onload = function() {
             return;
         }
 
-        // If legal, record it in moveHistory for undo
-        moveHistory.push({
-            position: game.fen(),
-            move: moveObj
-        });
-
+        // If legal, add to moveHistory
+        moveHistory.push(moveObj);
+        
         // Update board & UI
         board.position(game.fen());
         updateStatus();
@@ -259,9 +262,6 @@ window.onload = function() {
     }
 
     function onDrop(source, target) {
-        // store current position for undo
-        const currentPosition = game.fen();
-
         // see if the move is legal
         const move = game.move({
             from: source,
@@ -272,12 +272,9 @@ window.onload = function() {
         // if illegal, snap back
         if (move === null) return 'snapback';
 
-        // store into history
-        moveHistory.push({
-            position: currentPosition,
-            move: move
-        });
-
+        // store AFTER move is made
+        moveHistory.push(move);
+        
         updateStatus();
     }
 
@@ -323,7 +320,13 @@ window.onload = function() {
         }
 
         statusEl.textContent = status;
-        pgnEl.textContent = game.pgn({ max_width: 5, newline_char: '\n' });
+        
+        // Update PGN display without the [SetUp "1"] tag
+        const pgn = game.pgn({ max_width: 5, newline_char: '\n' });
+        // Remove [SetUp "1"] and similar tags if present
+        const cleanPgn = pgn.replace(/\[\s*SetUp\s*"1"\s*\]\s*/g, '')
+                            .replace(/\[\s*FEN\s*"[^"]*"\s*\]\s*/g, '');
+        pgnEl.textContent = cleanPgn;
 
         if (!game.game_over() && !gameOverByKingCapture && aiEnabled) {
             scheduleEngineAnalysis();
@@ -382,17 +385,27 @@ window.onload = function() {
         board.flip();
     });
 
-    // Undo
+    // Undo - FIXED to properly handle a single undo operation
     document.getElementById('undoBtn').addEventListener('click', () => {
         if (moveHistory.length === 0) return;
-        const lastMove = moveHistory.pop();
-        game.load(lastMove.position);
-        board.position(lastMove.position);
+        
+        // Get the last move from history and remove it
+        moveHistory.pop();
+        
+        // Undo the last move in the game
+        game.undo();
+        
+        // Update the board to reflect the new position
+        board.position(game.fen());
+        
+        // Reset the gameOverByKingCapture flag as we're undoing
         gameOverByKingCapture = false;
+        
+        // Update the status and UI
         updateStatus();
     });
 
-    // New “Apply AI Move” button
+    // New "Apply AI Move" button
     document.getElementById('applyAiBtn').addEventListener('click', () => {
         applyAIMove();
     });
