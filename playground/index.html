@@ -10,6 +10,7 @@
   <!-- Link to the common style.css and the playground.css file -->
   <link rel="stylesheet" href="../style.css" />
   <link rel="stylesheet" href="./playground.css" />
+  <script src="../script.js" defer></script>
 </head>
 <body>
   <header>
@@ -20,7 +21,6 @@
         <li><a href="./">playground</a></li>
         <li><a href="../cv/">cv</a></li>
       </ul>
-      <span class="last-updated">Last Updated: <span id="update-date"></span></span>
     </nav>
   </header>
 
@@ -67,15 +67,31 @@
   <!-- Inline styles only for the game grid and game card -->
   <style>
     .game-grid {
-      display: grid;
-      /* Set exactly three columns of fixed 180px width */
-      grid-template-columns: repeat(3, 180px);
-      gap: 60px;
-      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 1200px; 
+      margin: 0 auto;
+      padding: 0 20px;
+      gap: 30px;
     }
     .game-card {
+      position: relative;
       width: 215px;
-      height: 200px;
+      margin: 20px 0;
+      flex: 0 0 calc(33.333% - 30px);
+    }
+    .game-card::before {
+      content: "";
+      display: block;
+      padding-top: calc((200 / 215) * 100%); /* Maintains original 200/215 aspect ratio */
+    }
+    .game-card > a {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -85,18 +101,11 @@
       align-items: center;
       justify-content: space-between;
       overflow: hidden;
-    }
-    .game-card:hover {
-      transform: translateY(-5px);
-    }
-    .game-card a {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      height: 100%;
-      text-align: center;
-      color: inherit;
       text-decoration: none;
+      color: inherit;
+    }
+    .game-card:hover > a {
+      transform: translateY(-5px);
     }
     .game-card img {
       width: 100%;
@@ -105,6 +114,7 @@
     }
     .game-title {
       height: 15%;
+      width: 100%;
       font-size: 0.9em;
       font-weight: bold;
       padding: 6px;
@@ -113,10 +123,24 @@
       align-items: center;
       justify-content: center;
     }
+
+    /* Responsive design based on container width */
+    @media (max-width: 1199px) {
+      .game-card {
+        flex: 0 0 calc(50% - 30px);
+      }
+    }
+
+    @media (max-width: 799px) {
+      .game-grid {
+        gap: 20px;
+      }
+      .game-card {
+        flex: 0 0 calc(100% - 20px);
+        margin: 15px 0;
+      }
+    }
   </style>
 
-  <script>
-    document.getElementById("update-date").textContent = new Date(document.lastModified).toLocaleDateString();
-  </script>
 </body>
-</html>
+</htm

@@ -12,6 +12,8 @@
   <!-- Global & Custom CSS -->
   <link rel="stylesheet" href="../../style.css" />
   <link rel="stylesheet" href="chinese-chess.css" />
+  <script src="../../script.js" defer></script>
+
 </head>
 <body>
   <header>
@@ -22,10 +24,6 @@
         <li><a href="../">playground</a></li>
         <li><a href="../../cv/">cv</a></li>
       </ul>
-      <span class="last-updated">
-        Last Updated:
-        <span id="update-date"></span>
-      </span>
     </nav>
   </header>
 
@@ -95,9 +93,5 @@
   <!-- Xiangqi JS -->
   <script src="chinese-chess.js"></script>
   <!-- Last-Updated Script -->
-  <script>
-    document.getElementById("update-date").textContent =
-      new Date(document.lastModified).toLocaleDateString();
-  </script>
 </body>
 </html>

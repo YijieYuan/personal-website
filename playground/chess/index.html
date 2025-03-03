@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="../../style.css">
     <link rel="stylesheet" href="chessboard.css">
     <link rel="stylesheet" href="chess-game.css">
+    <script src="../../script.js" defer></script>
 </head>
 <body>
     <header>
@@ -20,7 +21,6 @@
                 <li><a href="../">playground</a></li>
                 <li><a href="../../cv/">cv</a></li>
             </ul>
-            <span class="last-updated">Last Updated: <span id="update-date"></span></span>
         </nav>
     </header>
 
@@ -88,8 +88,5 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.js"></script>
     <script src="chessboard.js"></script>
     <script src="chess-game.js"></script>
-    <script>
-        document.getElementById("update-date").textContent = new Date(document.lastModified).toLocaleDateString();
-    </script>
 </body>
 </html>
