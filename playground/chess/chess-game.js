@@ -13,7 +13,7 @@ window.onload = function() {
 
     let moveHistory = [];
     let gameOverByKingCapture = false;
-    let aiEnabled = true;
+    let aiEnabled = false;
 
     /**************************************************************
      * 2) Stockfish Engine Variables

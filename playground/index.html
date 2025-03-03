@@ -31,20 +31,31 @@
     <div class="section-title">Board Games</div>
     <div class="section-content">
       <div class="game-grid">
+        
+        <!-- Game Card: Gomoku -->
         <div class="game-card">
-          <a href="./chess/">
-            <img src="./chess.png" alt="Chess" /> <!-- replace with a chess image if you have one -->
-            <div class="game-title">Chess</div>
+          <a href="./gomoku/">
+            <img src="./gomoku.png" alt="Gomoku" />
+            <div class="game-title">Gomoku (五子棋)</div>
           </a>
         </div>
 
-        <!-- Single Game Card -->
+        <!-- Game Card: Chess -->
+        <div class="game-card">
+          <a href="./chess/">
+            <img src="./chess.png" alt="Chess" /> <!-- replace with a chess image if you have one -->
+            <div class="game-title">Chess (国象)</div>
+          </a>
+        </div>
+
+        <!-- Game Card: Chinese Chess -->
         <div class="game-card">
           <a href="./chinese-chess/">
             <img src="./chinese-chess.png" alt="Chinese Chess" />
             <div class="game-title">Chinese Chess (象棋)</div>
           </a>
         </div>
+      
       </div>
     </div>
   </div>
@@ -59,12 +70,12 @@
       display: grid;
       /* Set exactly three columns of fixed 180px width */
       grid-template-columns: repeat(3, 180px);
-      gap: 20px;
+      gap: 60px;
       margin: 0;
     }
     .game-card {
-      width: 180px;
-      height: 180px;
+      width: 215px;
+      height: 200px;
       background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
