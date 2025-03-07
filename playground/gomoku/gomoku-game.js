@@ -9,6 +9,8 @@ window.onload = function() {
     const BLACK = 'black';
     const WHITE = 'white';
     
+    // No time limit for AI computation
+    
     // DOM elements
     const board = new GoBoard($('#board'));
     const statusEl = document.getElementById('status');
@@ -37,9 +39,6 @@ window.onload = function() {
     let whiteAiThinking = false;
     let blackAiCancelCount = 0;
     let whiteAiCancelCount = 0;
-    
-    // Set a fixed computation time limit to ensure consistency across devices
-    const AI_COMPUTATION_TIME = 2000; // 2 seconds computation time limit
     
     // Initialize AI workers
     let blackAiWorker = new Worker('ai-worker.js');

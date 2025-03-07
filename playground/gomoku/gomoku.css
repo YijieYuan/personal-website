@@ -83,6 +83,7 @@ h1 {
     overflow: visible; /* Allow labels to be visible outside the board */
     margin-left: 22px; /* Room for row labels */
     margin-bottom: 22px; /* Room for column labels */
+    box-sizing: content-box; /* Ensure border doesn't affect dimensions */
 }
 
 .board-grid {
@@ -116,18 +117,19 @@ h1 {
     transform: translateX(-50%);
 }
 
+/* Improved go-place positioning */
 .go-place {
     position: absolute;
     z-index: 10;
     cursor: pointer;
-    box-sizing: border-box; /* Include border in size calculation */
+    box-sizing: border-box;
 }
 
-/* Responsive stone styling - using relative units instead of fixed pixels */
+/* Improved stone styling - centered within cells */
 .go {
     position: absolute;
-    width: 80%;         /* Relative to the cell size instead of fixed 30px */
-    height: 80%;        /* Relative to the cell size instead of fixed 30px */
+    width: 80%;
+    height: 80%;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -150,37 +152,26 @@ h1 {
     border: 1px solid #ccc;
 }
 
-/* Updated last move highlighting with relative units */
-.go-place.last-move .go {
-    box-shadow: 0 0 0 max(2px, min(3px, 5%)) rgba(255, 0, 0, 0.5);
+/* Last move highlight style - dashed pink border */
+.go-place.last-move {
+    border: 3px dashed #ff639f;
+    z-index: 4;
 }
 
-/* AI suggestion style - consistent across all devices */
+/* AI suggestion style - dashed blue border with transparent background and square corners */
 .go-place.ai-suggestion {
-    background-color: transparent;
-    position: relative;
-    border: none;
-}
-
-.go-place.ai-suggestion::before {
-    content: '';
-    position: absolute;
-    top: 10%;
-    left: 10%;
-    width: 80%;
-    height: 80%;
-    border: 3px dashed #7482ff; 
-    border-radius: 50%;
-    box-sizing: border-box;
+    border: 3px dashed #7482ff;
     z-index: 3;
+    background-color: transparent;
+    border-radius: 0;
 }
 
-/* Star points (dark dots) - more responsive */
+/* Star points (dark dots) - properly centered */
 .go-darkdot::after {
     content: '';
     position: absolute;
-    width: min(8px, 1.5vw);   /* Responsive width based on viewport width */
-    height: min(8px, 1.5vw);  /* Responsive height based on viewport width */
+    width: 8px;
+    height: 8px;
     background-color: #333;
     border-radius: 50%;
     top: 50%;
@@ -364,11 +355,11 @@ footer {
     }
     
     .row-label {
-        left: -18px;
+        left: -20px;
     }
     
     .col-label {
-        bottom: -18px;
+        bottom: -20px;
     }
 }
 
@@ -401,26 +392,38 @@ footer {
     }
     
     .row-label {
-        left: -20px; /* Increased spacing from edge */
+        left: -18px;
         width: 14px;
     }
     
     .col-label {
-        bottom: -20px; /* Increased spacing from edge */
+        bottom: -18px;
         width: 14px;
     }
     
     /* Adjust board margins to match the increased label spacing */
     #board {
-        margin-left: 24px;
-        margin-bottom: 24px;
+        margin-left: 20px;
+        margin-bottom: 20px;
+        width: calc(100% - 20px);
     }
     
     .controls {
-        margin-left: 24px;
-        width: calc(100% - 24px);
+        margin-left: 20px;
+        width: calc(100% - 20px);
     }
-}
+    
+    /* Stone positioning for small screens - ensure they're properly centered */
+    .go {
+        width: 75%;
+        height: 75%;
+    }
+    
+    /* Adjust star points size for small screens */
+    .go-darkdot::after {
+        width: 6px;
+        height: 6px;
+    }
     
     /* Adjust section headers */
     .info-section h2 {
@@ -448,7 +451,7 @@ footer {
     .status-text {
         font-size: 12px;
     }
-
+}
 
 /* Touch-specific improvements to prevent accidental zoom/scroll */
 @media (pointer: coarse) {
@@ -462,6 +465,50 @@ footer {
     .controls button {
         padding-top: 10px;
         padding-bottom: 10px;
+    }
+    
+    /* Portrait orientation specific adjustments for mobile */
+    @media (orientation: portrait) and (max-width: 600px) {
+        #board {
+            margin-left: 18px;
+            margin-bottom: 18px;
+            width: calc(100% - 18px);
+        }
+        
+        .row-label {
+            left: -16px;
+        }
+        
+        .col-label {
+            bottom: -16px;
+        }
+    }
+    
+    /* Landscape orientation specific adjustments for mobile */
+    @media (orientation: landscape) and (max-height: 450px) {
+        .game-wrapper {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .game-container {
+            width: 60%;
+        }
+        
+        .info-section {
+            width: 35%;
+        }
+        
+        #board {
+            width: calc(100% - 20px);
+            height: 0;
+            padding-bottom: calc(100% - 20px);
+        }
+        
+        .history-text {
+            height: 80px;
+        }
     }
 }
 

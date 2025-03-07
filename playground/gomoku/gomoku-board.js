@@ -1,6 +1,6 @@
 /**
  * Gomoku Board UI Implementation
- * Improved for mobile responsiveness
+ * Improved for mobile responsiveness with better stone alignment
  */
 (function() {
     'use strict';
@@ -403,6 +403,14 @@
         // Listen for resize events to adjust the UI
         window.addEventListener('resize', () => {
             this.adjustForScreenSize();
+        });
+        
+        // Add orientation change event listener for mobile devices
+        window.addEventListener('orientationchange', () => {
+            // Small delay to ensure the UI has adjusted to the new orientation
+            setTimeout(() => {
+                this.adjustForScreenSize();
+            }, 100);
         });
         
         return this;
