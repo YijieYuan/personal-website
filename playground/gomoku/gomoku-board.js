@@ -9,7 +9,7 @@
     const LETTERS = 'ABCDEFGHJKLMNOP'.split(''); // Skip 'I' for clarity
 
     /**
-     * Place class for a single intersect on the board
+     * Place class for a single position on the board
      */
     class Place {
         constructor(r, c, board) {
@@ -17,45 +17,91 @@
             this.c = c;
             this.board = board;
             
-            // Create DOM element
+            // Create DOM element for the cell
             const elm = document.createElement("div");
             elm.className = "go-place";
             
-            // Calculate position
+            // Calculate position - place in the center of cells with exact cell dimensions
             const s = elm.style;
             s.position = 'absolute';
             
-            // Position at the grid intersections (not in cells)
-            s.top = r * (100 / (BOARD_SIZE - 1)) + '%';
-            s.left = c * (100 / (BOARD_SIZE - 1)) + '%';
-            s.transform = 'translate(-50%, -50%)';
+            // Position calculation for cell centers in a 15x15 grid
+            const cellSize = 100 / BOARD_SIZE;
+            s.top = (r * cellSize) + '%';  // Top of cell
+            s.left = (c * cellSize) + '%'; // Left of cell
+            s.width = cellSize + '%';      // Set width to match cell
+            s.height = cellSize + '%';     // Set height to match cell
             
-            // Create inner stone element
+            // Create inner stone element centered within the cell
             const inner = document.createElement("div");
             inner.className = "go";
+            inner.style.position = 'absolute';
+            inner.style.top = '50%';
+            inner.style.left = '50%';
+            inner.style.transform = 'translate(-50%, -50%)';
             elm.appendChild(inner);
             
             // Add click handler
             elm.onclick = () => {
-                board.clicked(r, c);
+                // Only handle clicks if the position is valid
+                if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
+                    board.clicked(r, c);
+                }
             };
+            
+            // Add touch support
+            if ("ontouchstart" in window) {
+                let moved = false;
+                
+                elm.ontouchstart = (e) => {
+                    moved = false;
+                    return false;
+                };
+                
+                elm.ontouchmove = (e) => {
+                    moved = true;
+                    return false;
+                };
+                
+                elm.ontouchend = (e) => {
+                    if (!moved) {
+                        board.clicked(r, c);
+                    }
+                    moved = false;
+                    return false;
+                };
+            }
             
             this.elm = $(elm);
             this.isSet = false;
         }
         
         set(color) {
-            this.elm.addClass("set").addClass(color).removeClass("warning");
+            this.elm.addClass("set").addClass(color).removeClass("warning").removeClass("ai-suggestion");
             this.isSet = true;
         }
         
         unset() {
-            this.elm.removeClass("black").removeClass("white").removeClass("set").removeClass("last-move");
+            this.elm.removeClass("black").removeClass("white").removeClass("set").removeClass("last-move").removeClass("ai-suggestion");
             this.isSet = false;
         }
         
         highlight() {
             this.elm.addClass("last-move");
+        }
+        
+        removeHighlight() {
+            this.elm.removeClass("last-move");
+        }
+        
+        markAsSuggestion() {
+            if (!this.isSet) {
+                this.elm.addClass("ai-suggestion");
+            }
+        }
+        
+        unmarkAsSuggestion() {
+            this.elm.removeClass("ai-suggestion");
         }
     }
 
@@ -67,6 +113,7 @@
         let places = [];
         let clickable = true;
         let lastMove = null;
+        let currentSuggestion = null;
         
         // Initialize the grid
         const createGrid = () => {
@@ -79,24 +126,33 @@
             
             // Add row indices and column letters (outside grid container)
             for (let i = 0; i < BOARD_SIZE; i++) {
-                // Row indices (1-15 from bottom to top)
+                // Row indices (1-15 from top to bottom)
                 const rowLabel = document.createElement("div");
                 rowLabel.className = "board-label row-label";
-                rowLabel.textContent = (BOARD_SIZE - i).toString();
-                rowLabel.style.top = (i * (100 / (BOARD_SIZE - 1))) + '%';
+                rowLabel.textContent = (BOARD_SIZE - i).toString(); // 15 at top, 1 at bottom
+                // Position at center of cells
+                rowLabel.style.top = ((i + 0.5) * (100 / BOARD_SIZE)) + '%';
                 boardElm.append(rowLabel);
                 
                 // Column letters (A-P, skip I)
                 const colLabel = document.createElement("div");
                 colLabel.className = "board-label col-label";
-                colLabel.textContent = LETTERS[i];
-                colLabel.style.left = (i * (100 / (BOARD_SIZE - 1))) + '%';
+                colLabel.textContent = LETTERS[i]; // A at left, P at right
+                // Position at center of cells
+                colLabel.style.left = ((i + 0.5) * (100 / BOARD_SIZE)) + '%';
                 boardElm.append(colLabel);
             }
             
-            // Add horizontal lines
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                const y = i * (100 / (BOARD_SIZE - 1));
+            // Add background grid for cells - just for visual enhancement
+            const background = document.createElementNS(svgNS, "rect");
+            background.setAttribute("width", "100%");
+            background.setAttribute("height", "100%");
+            background.setAttribute("fill", "#e9bb7d");
+            grid.appendChild(background);
+            
+            // Add horizontal lines for 15x15 grid
+            for (let i = 0; i <= BOARD_SIZE; i++) {
+                const y = i * (100 / BOARD_SIZE);
                 const line = document.createElementNS(svgNS, "line");
                 line.setAttribute("x1", "0%");
                 line.setAttribute("y1", y + "%");
@@ -107,9 +163,9 @@
                 grid.appendChild(line);
             }
             
-            // Add vertical lines
-            for (let i = 0; i < BOARD_SIZE; i++) {
-                const x = i * (100 / (BOARD_SIZE - 1));
+            // Add vertical lines for 15x15 grid
+            for (let i = 0; i <= BOARD_SIZE; i++) {
+                const x = i * (100 / BOARD_SIZE);
                 const line = document.createElementNS(svgNS, "line");
                 line.setAttribute("x1", x + "%");
                 line.setAttribute("y1", "0%");
@@ -135,7 +191,7 @@
                 }
             }
             
-            // Add star points (dark dots) for 15x15 board
+            // Add star points (dark dots) for 15x15 board - traditional star points
             const starPoints = [[3, 3], [3, 7], [3, 11], 
                                 [7, 3], [7, 7], [7, 11], 
                                 [11, 3], [11, 7], [11, 11]];
@@ -153,6 +209,11 @@
         
         // Handle clicks - this will be overridden by the game controller
         this.clicked = function(r, c) {
+            // Check if coordinates are valid board positions
+            if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) {
+                console.log(`Invalid click position: row ${r}, col ${c}`);
+                return;
+            }
             console.log(`Clicked: row ${r}, col ${c}`);
         };
         
@@ -180,10 +241,39 @@
         
         this.highlight = function(r, c) {
             if (lastMove !== null) {
-                places[lastMove.r][lastMove.c].elm.removeClass("last-move");
+                places[lastMove.r][lastMove.c].removeHighlight();
             }
             places[r][c].highlight();
             lastMove = {r, c};
+        };
+        
+        this.clearLastMoveHighlight = function() {
+            if (lastMove !== null) {
+                places[lastMove.r][lastMove.c].removeHighlight();
+                lastMove = null;
+            }
+        };
+        
+        this.showSuggestion = function(r, c) {
+            // Clear previous suggestion if it exists
+            if (currentSuggestion !== null) {
+                places[currentSuggestion.r][currentSuggestion.c].unmarkAsSuggestion();
+            }
+            
+            // Mark the new suggestion if it's not already set
+            if (!places[r][c].isSet) {
+                places[r][c].markAsSuggestion();
+                currentSuggestion = {r, c};
+            } else {
+                currentSuggestion = null;
+            }
+        };
+        
+        this.clearSuggestion = function() {
+            if (currentSuggestion !== null) {
+                places[currentSuggestion.r][currentSuggestion.c].unmarkAsSuggestion();
+                currentSuggestion = null;
+            }
         };
         
         this.isSet = function(r, c) {
@@ -198,6 +288,7 @@
         
         this.init = function() {
             lastMove = null;
+            currentSuggestion = null;
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
                     places[r][c].unset();

@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="gomoku.css">
     <script src="../../script.js" defer></script>
-
 </head>
 <body>
     <header>
@@ -30,17 +29,10 @@
             <div id="board"></div>
             <div class="controls">
                 <button id="startBtn">Restart</button>
-                <button id="clearBtn">Clear</button>
                 <button id="undoBtn">Undo</button>
-                <button id="applyAiBtn">Make AI Move</button>
-            </div>
-            <div class="ai-controls">
-                <div class="ai-controls-row">
-                    <label class="ai-toggle">
-                        <input type="checkbox" id="aiToggle">
-                        AI Suggestions
-                    </label>
-                </div>
+                <button id="makeMoveBtn">AI Move</button>
+                <button id="autoBlackBtn" class="auto-play-btn">Auto Black</button>
+                <button id="autoWhiteBtn" class="auto-play-btn">Auto White</button>
             </div>
         </div>
 
@@ -52,25 +44,7 @@
 
             <div class="ai-section">
                 <h2>AI Analysis</h2>
-                <div id="aiSuggestion" class="ai-suggestion">AI Suggestions: Disabled</div>
-                
-                <div class="prediction-section">
-                    <h3>Win Prediction</h3>
-                    <div class="prediction-container">
-                        <div class="prediction-row">
-                            <span class="side-label">White</span>
-                            <div class="prediction-bar">
-                                <div id="whiteBar" class="white-bar" style="width: 50%">50%</div>
-                            </div>
-                        </div>
-                        <div class="prediction-row">
-                            <span class="side-label">Black</span>
-                            <div class="prediction-bar">
-                                <div id="blackBar" class="black-bar" style="width: 50%">50%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="aiSuggestion" class="ai-suggestion">Initializing AI...</div>
             </div>
 
             <div class="move-history">
@@ -86,7 +60,6 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="gomoku-board.js"></script>
-    <script src="gomoku-ai.js"></script>
     <script src="gomoku-game.js"></script>
 </body>
 </html>

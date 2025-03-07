@@ -1,6 +1,6 @@
 /**
  * Gomoku Game Controller
- * With randomness control
+ * Using ai-worker.js directly with dual AI support
  */
 window.onload = function() {
     // Game constants
@@ -14,28 +14,194 @@ window.onload = function() {
     const statusEl = document.getElementById('status');
     const moveHistoryEl = document.getElementById('moveHistory');
     const aiSuggestionEl = document.getElementById('aiSuggestion');
-    const whiteBarEl = document.getElementById('whiteBar');
-    const blackBarEl = document.getElementById('blackBar');
+    const undoBtn = document.getElementById('undoBtn');
+    const startBtn = document.getElementById('startBtn');
+    const makeMoveBtn = document.getElementById('makeMoveBtn');
+    const autoBlackBtn = document.getElementById('autoBlackBtn');
+    const autoWhiteBtn = document.getElementById('autoWhiteBtn');
     
     // Game state
     let currentPlayer = BLACK; // Black goes first
     let moveHistory = [];
     let gameOver = false;
-    let aiEnabled = false; // AI suggestion disabled by default
-    let analysisTimer = null;
-    const analysisDelay = 500; // ms to wait after move before analyzing
-    let bestMove = null;
-    let aiRandomness = 0; // 0 means no randomness, 1 means very random
+    let boardClickable = true; // Flag to control board clickability
     
-    // Initialize AI
-    let ai = new GomokuAI({
-        randomnessFactor: aiRandomness
-    });
+    // AI state
+    let blackAutoPlay = false;
+    let whiteAutoPlay = false;
+    let blackBestMove = null;
+    let whiteBestMove = null;
+    let blackAiThinking = false;
+    let whiteAiThinking = false;
+    let blackAiCancelCount = 0;
+    let whiteAiCancelCount = 0;
+    
+    // Initialize AI workers
+    let blackAiWorker = new Worker('ai-worker.js');
+    let whiteAiWorker = new Worker('ai-worker.js');
+    
+    /**
+     * Set up Black AI worker event listeners
+     */
+    function setupBlackAIWorkerEventListeners() {
+        blackAiWorker.onmessage = function(e) {
+            const data = e.data;
+            
+            switch(data.type) {
+                case 'ini_complete':
+                    console.log('Black AI initialized');
+                    blackAiThinking = false;
+                    updateBoardClickability();
+                    
+                    if (currentPlayer === BLACK && moveHistory.length === 0) {
+                        // For first move, always suggest center
+                        blackBestMove = { r: 7, c: 7 };
+                        updateAiSuggestion();
+                        
+                        // Auto-play if enabled
+                        if (blackAutoPlay && !gameOver) {
+                            setTimeout(() => {
+                                makeMove(blackBestMove.r, blackBestMove.c);
+                            }, 500);
+                        }
+                    } else if (currentPlayer === BLACK && !gameOver) {
+                        startBlackAIAnalysis();
+                    }
+                    break;
+                    
+                case 'watch_complete':
+                    console.log('Black AI updated');
+                    
+                    // If there are cancel requests pending, don't start analysis
+                    if (blackAiCancelCount > 0) {
+                        blackAiCancelCount--;
+                        blackAiThinking = false;
+                        console.log('Black AI analysis cancelled, remaining cancels:', blackAiCancelCount);
+                    }
+                    // Otherwise, if it's black's turn, start computation
+                    else if (currentPlayer === BLACK && !gameOver) {
+                        startBlackAIAnalysis();
+                    } else {
+                        blackAiThinking = false;
+                    }
+                    
+                    updateBoardClickability();
+                    break;
+                    
+                case 'starting':
+                    console.log('Black AI computing started');
+                    blackAiThinking = true;
+                    updateBoardClickability();
+                    break;
+                    
+                case 'decision':
+                    console.log('Black AI decision received', data);
+                    
+                    // If there are cancel requests, ignore this result
+                    if (blackAiCancelCount > 0) {
+                        blackAiCancelCount--;
+                        console.log('Ignoring Black AI decision due to cancellation, remaining cancels:', blackAiCancelCount);
+                    } else {
+                        blackAiThinking = false;
+                        blackBestMove = { r: data.r, c: data.c };
+                        updateBoardClickability();
+                        updateAiSuggestion();
+                        
+                        // Auto-play if enabled and it's black's turn
+                        if (currentPlayer === BLACK && blackAutoPlay && !gameOver) {
+                            setTimeout(() => {
+                                makeMove(blackBestMove.r, blackBestMove.c);
+                            }, 500);
+                        }
+                    }
+                    break;
+                    
+                default:
+                    console.log('Unknown message from Black AI:', data);
+                    blackAiThinking = false;
+                    updateBoardClickability();
+            }
+        };
+    }
+    
+    /**
+     * Set up White AI worker event listeners
+     */
+    function setupWhiteAIWorkerEventListeners() {
+        whiteAiWorker.onmessage = function(e) {
+            const data = e.data;
+            
+            switch(data.type) {
+                case 'ini_complete':
+                    console.log('White AI initialized');
+                    whiteAiThinking = false;
+                    updateBoardClickability();
+                    
+                    if (currentPlayer === WHITE && !gameOver) {
+                        startWhiteAIAnalysis();
+                    }
+                    break;
+                    
+                case 'watch_complete':
+                    console.log('White AI updated');
+                    
+                    // If there are cancel requests pending, don't start analysis
+                    if (whiteAiCancelCount > 0) {
+                        whiteAiCancelCount--;
+                        whiteAiThinking = false;
+                        console.log('White AI analysis cancelled, remaining cancels:', whiteAiCancelCount);
+                    }
+                    // Otherwise, if it's white's turn, start computation
+                    else if (currentPlayer === WHITE && !gameOver) {
+                        startWhiteAIAnalysis();
+                    } else {
+                        whiteAiThinking = false;
+                    }
+                    
+                    updateBoardClickability();
+                    break;
+                    
+                case 'starting':
+                    console.log('White AI computing started');
+                    whiteAiThinking = true;
+                    updateBoardClickability();
+                    break;
+                    
+                case 'decision':
+                    console.log('White AI decision received', data);
+                    
+                    // If there are cancel requests, ignore this result
+                    if (whiteAiCancelCount > 0) {
+                        whiteAiCancelCount--;
+                        console.log('Ignoring White AI decision due to cancellation, remaining cancels:', whiteAiCancelCount);
+                    } else {
+                        whiteAiThinking = false;
+                        whiteBestMove = { r: data.r, c: data.c };
+                        updateBoardClickability();
+                        updateAiSuggestion();
+                        
+                        // Auto-play if enabled and it's white's turn
+                        if (currentPlayer === WHITE && whiteAutoPlay && !gameOver) {
+                            setTimeout(() => {
+                                makeMove(whiteBestMove.r, whiteBestMove.c);
+                            }, 500);
+                        }
+                    }
+                    break;
+                    
+                default:
+                    console.log('Unknown message from White AI:', data);
+                    whiteAiThinking = false;
+                    updateBoardClickability();
+            }
+        };
+    }
     
     /**
      * Make a move at the specified position
      */
     function makeMove(r, c) {
+        // Don't allow moves if the game is over or the move is invalid
         if (gameOver || !isValidMove(r, c)) return false;
         
         // Place the stone
@@ -59,7 +225,10 @@ window.onload = function() {
             gameOver = true;
             const winner = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
             statusEl.textContent = `Game over! ${winner} wins!`;
-            updateWinPrediction();
+            aiSuggestionEl.textContent = 'Game over';
+            enableBoardClicks(); // Make sure board is enabled for viewing the final position
+            updateUndoButtonState();
+            updateAutoPlayButtons();
             return true;
         }
         
@@ -67,9 +236,27 @@ window.onload = function() {
         if (moveHistory.length === BOARD_SIZE * BOARD_SIZE) {
             gameOver = true;
             statusEl.textContent = 'Game over! It\'s a draw.';
-            updateWinPrediction();
+            aiSuggestionEl.textContent = 'Game over';
+            enableBoardClicks(); // Make sure board is enabled for viewing the final position
+            updateUndoButtonState();
+            updateAutoPlayButtons();
             return true;
         }
+        
+        // Notify both AIs of the move
+        blackAiWorker.postMessage({ 
+            type: 'watch',
+            r: r,
+            c: c,
+            color: currentPlayer
+        });
+        
+        whiteAiWorker.postMessage({ 
+            type: 'watch',
+            r: r,
+            c: c,
+            color: currentPlayer
+        });
         
         // Switch player
         currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
@@ -78,15 +265,11 @@ window.onload = function() {
         const playerName = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
         statusEl.textContent = `${playerName}'s turn.`;
         
-        // Cancel any ongoing AI analysis
-        if (ai.isComputing) {
-            ai.cancelSearch();
-        }
+        // Update AI suggestion for the new current player
+        updateAiSuggestion();
         
-        // Schedule AI analysis for the next player
-        if (aiEnabled) {
-            scheduleEngineAnalysis();
-        }
+        // Update board clickability based on whose turn it is
+        updateBoardClickability();
         
         return true;
     }
@@ -95,7 +278,7 @@ window.onload = function() {
      * Check if a move is valid
      */
     function isValidMove(r, c) {
-        // Check if coordinates are within bounds
+        // Check if coordinates are within bounds (0-based indexing, so 0 to BOARD_SIZE-1)
         if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) {
             return false;
         }
@@ -186,86 +369,51 @@ window.onload = function() {
     }
     
     /**
-     * Update AI randomness factor
+     * Update AI suggestion based on current player
      */
-    function updateRandomness(value) {
-        aiRandomness = parseFloat(value);
-        ai = new GomokuAI({
-            randomnessFactor: aiRandomness
-        });
-        
-        // Update UI
-        const randomnessLevel = document.getElementById('randomnessLevel');
-        if (randomnessLevel) {
-            const levelText = aiRandomness === 0 ? 'None' : 
-                             (aiRandomness <= 0.2 ? 'Low' : 
-                             (aiRandomness <= 0.5 ? 'Medium' : 'High'));
-            randomnessLevel.textContent = levelText;
+    function updateAiSuggestion() {
+        if (gameOver) {
+            aiSuggestionEl.textContent = 'Game over';
+            board.clearSuggestion();
+            return;
         }
         
-        if (aiEnabled) {
-            scheduleEngineAnalysis();
-        }
-    }
-    
-    /**
-     * Initialize the game
-     */
-    function initGame() {
-        // If AI is computing, cancel the computation
-        if (ai.isComputing) {
-            ai.cancelSearch();
-        }
-        
-        // Reset the game state
-        board.init();
-        currentPlayer = BLACK;
-        moveHistory = [];
-        gameOver = false;
-        bestMove = null;
-        statusEl.textContent = 'Black\'s turn.';
-        moveHistoryEl.textContent = '';
-        
-        if (aiEnabled) {
-            aiSuggestionEl.textContent = 'AI is analyzing...';
+        if (currentPlayer === BLACK) {
+            if (blackAiThinking) {
+                aiSuggestionEl.textContent = 'Black AI is analyzing...';
+                board.clearSuggestion();
+            } else if (blackBestMove) {
+                const notation = board.coordToString(blackBestMove.r, blackBestMove.c);
+                aiSuggestionEl.textContent = `Black AI suggests: ${notation}`;
+                
+                // Show suggestion on the board if auto play is off
+                if (!blackAutoPlay) {
+                    board.showSuggestion(blackBestMove.r, blackBestMove.c);
+                } else {
+                    board.clearSuggestion();
+                }
+            } else {
+                aiSuggestionEl.textContent = 'Black AI is calculating...';
+                board.clearSuggestion();
+            }
         } else {
-            aiSuggestionEl.textContent = 'AI Suggestions: Disabled';
-        }
-        
-        // Reset the AI
-        ai = new GomokuAI({
-            randomnessFactor: aiRandomness
-        });
-        
-        updateWinPrediction();
-        
-        if (aiEnabled) {
-            scheduleEngineAnalysis();
-        }
-    }
-    
-    /**
-     * Handle board clicks
-     */
-    board.clicked = function(r, c) {
-        if (gameOver) return;
-        
-        // Allow placing stones for both sides
-        makeMove(r, c);
-    };
-    
-    /**
-     * Apply the AI's suggestion
-     */
-    function applyAISuggestion() {
-        if (gameOver || !aiEnabled || !bestMove) return;
-        
-        // Apply the best move for current player
-        if (isValidMove(bestMove.r, bestMove.c)) {
-            makeMove(bestMove.r, bestMove.c);
-        } else {
-            // If the suggested move is invalid, update the analysis
-            scheduleEngineAnalysis();
+            if (whiteAiThinking) {
+                aiSuggestionEl.textContent = 'White AI is analyzing...';
+                board.clearSuggestion();
+            } else if (whiteBestMove) {
+                const notation = board.coordToString(whiteBestMove.r, whiteBestMove.c);
+                aiSuggestionEl.textContent = `White AI suggests: ${notation}`;
+                
+                // Show suggestion on the board if auto play is off
+                if (!whiteAutoPlay) {
+                    board.showSuggestion(whiteBestMove.r, whiteBestMove.c);
+                } else {
+                    board.clearSuggestion();
+                }
+            } else {
+                aiSuggestionEl.textContent = 'White AI is calculating...';
+                board.clearSuggestion();
+            }
         }
     }
     
@@ -273,12 +421,16 @@ window.onload = function() {
      * Undo the last move
      */
     function undoMove() {
-        // If AI is computing, cancel it
-        if (ai.isComputing) {
-            ai.cancelSearch();
-        }
-        
+        // Don't allow undo if no moves to undo
         if (moveHistory.length === 0) return;
+        
+        // If either AI is thinking, increment the cancel counter
+        if (blackAiThinking) {
+            blackAiCancelCount++;
+        }
+        if (whiteAiThinking) {
+            whiteAiCancelCount++;
+        }
         
         // Undo the last move
         const lastMove = moveHistory.pop();
@@ -287,7 +439,7 @@ window.onload = function() {
         // Switch back to the previous player
         currentPlayer = lastMove.color;
         
-        // Update status and game state
+        // Update game state
         gameOver = false;
         
         // Update move history display
@@ -297,260 +449,334 @@ window.onload = function() {
         const playerName = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
         statusEl.textContent = `${playerName}'s turn.`;
         
+        // Notify both AIs of the undo
+        blackAiWorker.postMessage({ 
+            type: 'watch',
+            r: lastMove.r,
+            c: lastMove.c,
+            color: 'remove'
+        });
+        
+        whiteAiWorker.postMessage({ 
+            type: 'watch',
+            r: lastMove.r,
+            c: lastMove.c,
+            color: 'remove'
+        });
+        
         // Highlight the new last move if there is one
         if (moveHistory.length > 0) {
             const newLastMove = moveHistory[moveHistory.length - 1];
             board.highlight(newLastMove.r, newLastMove.c);
-        }
-        
-        // Update analysis
-        if (aiEnabled) {
-            scheduleEngineAnalysis();
         } else {
-            aiSuggestionEl.textContent = 'AI Suggestions: Disabled';
-        }
-    }
-    
-    /**
-     * Schedule AI analysis after a short delay
-     */
-    function scheduleEngineAnalysis() {
-        if (!aiEnabled) {
-            aiSuggestionEl.textContent = 'AI Suggestions: Disabled';
-            updateWinPrediction();
-            return;
+            // No moves left, clear any highlight
+            board.clearLastMoveHighlight();
         }
         
-        if (analysisTimer) {
-            clearTimeout(analysisTimer);
-        }
-        
-        aiSuggestionEl.textContent = 'AI is analyzing...';
-        
-        analysisTimer = setTimeout(() => {
-            startEngineAnalysis();
-        }, analysisDelay);
-    }
-    
-    /**
-     * Start the AI analysis
-     */
-    function startEngineAnalysis() {
-        if (!aiEnabled || gameOver) {
-            aiSuggestionEl.textContent = gameOver ? 
-                "Game is over" : "AI Suggestions: Disabled";
-            return;
-        }
-        
-        // Get current board state
-        const boardState = board.getBoardState();
-        
-        // Use setTimeout to allow UI to update
-        setTimeout(() => {
-            // Find best move for current player
-            bestMove = ai.findBestMove(boardState, currentPlayer);
-            
-            // Make sure the suggested move is valid (not already occupied)
-            if (bestMove && !board.isSet(bestMove.r, bestMove.c)) {
-                const notation = board.coordToString(bestMove.r, bestMove.c);
-                
-                // Determine if this is a winning or critical move
-                let moveType = '';
-                if (bestMove.isWinningMove) {
-                    moveType = ' (Winning Move!)';
-                } else if (bestMove.isForcedMove) {
-                    moveType = ' (Must Block!)';
-                } else if (bestMove.isOpenFour) {
-                    moveType = ' (Creates Open Four!)';
-                } else if (bestMove.isBlockingOpenFour) {
-                    moveType = ' (Blocks Open Four!)';
-                } else if (bestMove.isMultipleOpenThrees) {
-                    moveType = ` (Creates ${bestMove.openThreeCount} Open Threes!)`;
-                } else if (bestMove.isBlockingMultipleOpenThrees) {
-                    moveType = ' (Blocks Multiple Open Threes!)';
-                } else if (bestMove.isOpenThree) {
-                    moveType = ' (Creates Open Three)';
-                } else if (bestMove.isRandom) {
-                    moveType = ' (Randomized Move)';
-                }
-                
-                // Show suggestion without win probability
-                aiSuggestionEl.textContent = `Suggestion for ${currentPlayer}: ${notation}${moveType}`;
+        // Clear previous AI suggestion
+        if (currentPlayer === BLACK) {
+            if (moveHistory.length === 0) {
+                // First move suggestion
+                blackBestMove = { r: 7, c: 7 };
             } else {
-                aiSuggestionEl.textContent = `Suggestion for ${currentPlayer}: No valid move found`;
-                
-                // Should never happen with the improved AI that prevents random moves
-                console.error("AI failed to find a move - this should not happen");
+                blackBestMove = null;
             }
-            
-            // Update win prediction
-            updateWinPrediction();
-        }, 50);
+        } else {
+            whiteBestMove = null;
+        }
+        
+        // Update AI suggestion display
+        updateAiSuggestion();
+        
+        // Update UI states
+        updateBoardClickability();
+        updateAutoPlayButtons();
     }
     
     /**
-     * Update the win prediction bars with improved evaluation
+     * Initialize the game
      */
-    function updateWinPrediction() {
+    function initGame() {
+        // Always terminate and recreate both AI workers to ensure a clean state
+        blackAiWorker.terminate();
+        whiteAiWorker.terminate();
+        
+        blackAiWorker = new Worker('ai-worker.js');
+        whiteAiWorker = new Worker('ai-worker.js');
+        
+        setupBlackAIWorkerEventListeners();
+        setupWhiteAIWorkerEventListeners();
+        
+        // Reset the game state
+        board.init();
+        currentPlayer = BLACK;
+        moveHistory = [];
+        gameOver = false;
+        blackAiThinking = false;
+        whiteAiThinking = false;
+        blackAiCancelCount = 0;
+        whiteAiCancelCount = 0;
+        blackBestMove = null;
+        whiteBestMove = null;
+        statusEl.textContent = 'Black\'s turn.';
+        moveHistoryEl.textContent = '';
+        aiSuggestionEl.textContent = 'Initializing AI...';
+        
+        // Disable Make AI Move button initially
+        makeMoveBtn.disabled = true;
+        makeMoveBtn.classList.add('disabled');
+        
+        // Enable board clicks
+        enableBoardClicks();
+        
+        // Update button states
+        updateUndoButtonState();
+        updateMakeMoveButtonState();
+        updateAutoPlayButtons();
+        
+        // Initialize both AI workers
+        initBlackAIWorker();
+        initWhiteAIWorker();
+    }
+    
+    /**
+     * Initialize the Black AI worker
+     */
+    function initBlackAIWorker() {
+        blackAiWorker.postMessage({
+            type: 'ini',
+            mode: 'expert', // Fixed to expert level
+            color: 'black'
+        });
+    }
+    
+    /**
+     * Initialize the White AI worker
+     */
+    function initWhiteAIWorker() {
+        whiteAiWorker.postMessage({
+            type: 'ini',
+            mode: 'expert', // Fixed to expert level
+            color: 'white'
+        });
+    }
+    
+    /**
+     * Start Black AI analysis
+     */
+    function startBlackAIAnalysis() {
+        if (gameOver || currentPlayer !== BLACK) {
+            return;
+        }
+        
+        if (moveHistory.length === 0) {
+            // For first move, always suggest center
+            blackBestMove = { r: 7, c: 7 };
+            updateAiSuggestion();
+            
+            // Auto-play if enabled
+            if (blackAutoPlay) {
+                setTimeout(() => {
+                    makeMove(blackBestMove.r, blackBestMove.c);
+                }, 500);
+            }
+            return;
+        }
+        
+        // Start computation
+        blackAiThinking = true;
+        updateBoardClickability();
+        blackAiWorker.postMessage({ type: 'compute' });
+        updateAiSuggestion();
+    }
+    
+    /**
+     * Start White AI analysis
+     */
+    function startWhiteAIAnalysis() {
+        if (gameOver || currentPlayer !== WHITE) {
+            return;
+        }
+        
+        // Start computation
+        whiteAiThinking = true;
+        updateBoardClickability();
+        whiteAiWorker.postMessage({ type: 'compute' });
+        updateAiSuggestion();
+    }
+    
+    /**
+     * Enable board clicks
+     */
+    function enableBoardClicks() {
+        boardClickable = true;
+        $('#board').removeClass('disabled');
+    }
+    
+    /**
+     * Disable board clicks
+     */
+    function disableBoardClicks() {
+        boardClickable = false;
+        $('#board').addClass('disabled');
+    }
+    
+    /**
+     * Update board clickability based on current state
+     */
+    function updateBoardClickability() {
+        // Determine if the board should be clickable
+        const currentAiThinking = (currentPlayer === BLACK) ? blackAiThinking : whiteAiThinking;
+        const currentAutoPlay = (currentPlayer === BLACK) ? blackAutoPlay : whiteAutoPlay;
+        
+        if (gameOver || currentAiThinking || currentAutoPlay) {
+            disableBoardClicks();
+        } else {
+            enableBoardClicks();
+        }
+        
+        // Update button states
+        updateUndoButtonState();
+        updateMakeMoveButtonState();
+    }
+    
+    /**
+     * Update the undo button state
+     */
+    function updateUndoButtonState() {
+        if (moveHistory.length === 0) {
+            undoBtn.disabled = true;
+            undoBtn.classList.add('disabled');
+        } else {
+            undoBtn.disabled = false;
+            undoBtn.classList.remove('disabled');
+        }
+    }
+    
+    /**
+     * Update the make move button state
+     */
+    function updateMakeMoveButtonState() {
+        const currentBestMove = (currentPlayer === BLACK) ? blackBestMove : whiteBestMove;
+        const currentAiThinking = (currentPlayer === BLACK) ? blackAiThinking : whiteAiThinking;
+        
+        if (gameOver || currentAiThinking || !currentBestMove) {
+            makeMoveBtn.disabled = true;
+            makeMoveBtn.classList.add('disabled');
+        } else {
+            makeMoveBtn.disabled = false;
+            makeMoveBtn.classList.remove('disabled');
+        }
+    }
+    
+    /**
+     * Update auto play buttons state
+     */
+    function updateAutoPlayButtons() {
+        // Update Black AI auto play button
+        if (blackAutoPlay) {
+            autoBlackBtn.textContent = "Stop Black";
+            autoBlackBtn.classList.add('active');
+        } else {
+            autoBlackBtn.textContent = "Auto Black";
+            autoBlackBtn.classList.remove('active');
+        }
+        
+        // Update White AI auto play button
+        if (whiteAutoPlay) {
+            autoWhiteBtn.textContent = "Stop White";
+            autoWhiteBtn.classList.add('active');
+        } else {
+            autoWhiteBtn.textContent = "Auto White";
+            autoWhiteBtn.classList.remove('active');
+        }
+        
+        // Disable buttons if game is over
         if (gameOver) {
-            if (moveHistory.length > 0 && checkWin(moveHistory[moveHistory.length-1].r, moveHistory[moveHistory.length-1].c, moveHistory[moveHistory.length-1].color)) {
-                const winner = moveHistory[moveHistory.length-1].color;
-                
-                if (winner === BLACK) {
-                    blackBarEl.style.width = '100%';
-                    blackBarEl.textContent = '100%';
-                    whiteBarEl.style.width = '0%';
-                    whiteBarEl.textContent = '0%';
-                } else {
-                    whiteBarEl.style.width = '100%';
-                    whiteBarEl.textContent = '100%';
-                    blackBarEl.style.width = '0%';
-                    blackBarEl.textContent = '0%';
-                }
-            } else {
-                // Draw
-                whiteBarEl.style.width = '50%';
-                blackBarEl.style.width = '50%';
-                whiteBarEl.textContent = '50%';
-                blackBarEl.textContent = '50%';
-            }
-            return;
-        }
-        
-        if (!aiEnabled) {
-            // Show 50/50 when AI is disabled
-            whiteBarEl.style.width = '50%';
-            blackBarEl.style.width = '50%';
-            whiteBarEl.textContent = '50%';
-            blackBarEl.textContent = '50%';
-            return;
-        }
-        
-        // Get current board state
-        const boardState = board.getBoardState();
-        
-        // Evaluate current position probabilities
-        const currentProb = ai.evaluateWinProbability(boardState, currentPlayer);
-        
-        // If we have a best move, calculate the probabilities after that move
-        if (bestMove && currentPlayer === BLACK) {
-            // Simulate board after black makes the best move
-            const simulatedBoardState = JSON.parse(JSON.stringify(boardState));
-            simulatedBoardState.black.push([bestMove.r, bestMove.c]);
-            
-            // Show 100% for winning moves or virtual wins
-            if (bestMove.isWinningMove) {
-                blackBarEl.style.width = '100%';
-                blackBarEl.textContent = '100%';
-                whiteBarEl.style.width = '0%';
-                whiteBarEl.textContent = '0%';
-            } 
-            else if (bestMove.isOpenFour) {
-                blackBarEl.style.width = '95%';
-                blackBarEl.textContent = '95%';
-                whiteBarEl.style.width = '5%';
-                whiteBarEl.textContent = '5%';
-            }
-            else {
-                // Calculate probabilities after the best move
-                const afterMoveProb = ai.evaluateWinProbability(simulatedBoardState, WHITE);
-                
-                // Use the black probability after the move for black's bar
-                // and white probability after the move for white's bar
-                const blackPerc = Math.round(afterMoveProb.black * 100);
-                const whitePerc = Math.round(afterMoveProb.white * 100);
-                
-                blackBarEl.style.width = blackPerc + '%';
-                blackBarEl.textContent = blackPerc + '%';
-                whiteBarEl.style.width = whitePerc + '%';
-                whiteBarEl.textContent = whitePerc + '%';
-            }
-        } 
-        else if (bestMove && currentPlayer === WHITE) {
-            // Simulate board after white makes the best move
-            const simulatedBoardState = JSON.parse(JSON.stringify(boardState));
-            simulatedBoardState.white.push([bestMove.r, bestMove.c]);
-            
-            // Show 100% for winning moves or virtual wins
-            if (bestMove.isWinningMove) {
-                whiteBarEl.style.width = '100%';
-                whiteBarEl.textContent = '100%';
-                blackBarEl.style.width = '0%';
-                blackBarEl.textContent = '0%';
-            }
-            else if (bestMove.isOpenFour) {
-                whiteBarEl.style.width = '95%';
-                whiteBarEl.textContent = '95%';
-                blackBarEl.style.width = '5%';
-                blackBarEl.textContent = '5%';
-            }
-            else {
-                // Calculate probabilities after the best move
-                const afterMoveProb = ai.evaluateWinProbability(simulatedBoardState, BLACK);
-                
-                // Use the black probability after the move for black's bar
-                // and white probability after the move for white's bar
-                const blackPerc = Math.round(afterMoveProb.black * 100);
-                const whitePerc = Math.round(afterMoveProb.white * 100);
-                
-                blackBarEl.style.width = blackPerc + '%';
-                blackBarEl.textContent = blackPerc + '%';
-                whiteBarEl.style.width = whitePerc + '%';
-                whiteBarEl.textContent = whitePerc + '%';
-            }
-        }
-        else {
-            // Just use current probabilities if no best move is available
-            const blackPerc = Math.round(currentProb.black * 100);
-            const whitePerc = Math.round(currentProb.white * 100);
-            
-            blackBarEl.style.width = blackPerc + '%';
-            blackBarEl.textContent = blackPerc + '%';
-            whiteBarEl.style.width = whitePerc + '%';
-            whiteBarEl.textContent = whitePerc + '%';
+            autoBlackBtn.disabled = true;
+            autoWhiteBtn.disabled = true;
+            autoBlackBtn.classList.add('disabled');
+            autoWhiteBtn.classList.add('disabled');
+        } else {
+            autoBlackBtn.disabled = false;
+            autoWhiteBtn.disabled = false;
+            autoBlackBtn.classList.remove('disabled');
+            autoWhiteBtn.classList.remove('disabled');
         }
     }
+    
+    /**
+     * Toggle Black AI auto play
+     */
+    function toggleBlackAutoPlay() {
+        if (gameOver) return;
+        
+        blackAutoPlay = !blackAutoPlay;
+        updateAutoPlayButtons();
+        updateBoardClickability();
+        updateAiSuggestion(); // Update suggestion visibility
+        
+        // If it's black's turn and auto play is enabled, make the move
+        if (currentPlayer === BLACK && blackAutoPlay && blackBestMove) {
+            setTimeout(() => {
+                makeMove(blackBestMove.r, blackBestMove.c);
+            }, 500);
+        }
+    }
+    
+    /**
+     * Toggle White AI auto play
+     */
+    function toggleWhiteAutoPlay() {
+        if (gameOver) return;
+        
+        whiteAutoPlay = !whiteAutoPlay;
+        updateAutoPlayButtons();
+        updateBoardClickability();
+        updateAiSuggestion(); // Update suggestion visibility
+        
+        // If it's white's turn and auto play is enabled, make the move
+        if (currentPlayer === WHITE && whiteAutoPlay && whiteBestMove) {
+            setTimeout(() => {
+                makeMove(whiteBestMove.r, whiteBestMove.c);
+            }, 500);
+        }
+    }
+    
+    /**
+     * Make the current AI's suggested move
+     */
+    function makeAIMove() {
+        if (gameOver) return;
+        
+        const currentBestMove = (currentPlayer === BLACK) ? blackBestMove : whiteBestMove;
+        
+        if (currentBestMove) {
+            makeMove(currentBestMove.r, currentBestMove.c);
+        }
+    }
+    
+    /**
+     * Handle board clicks
+     */
+    board.clicked = function(r, c) {
+        // Only allow clicks when the board is clickable
+        if (!boardClickable || gameOver) return;
+        
+        // Allow placing stones for both sides
+        makeMove(r, c);
+    };
     
     // Event listeners for buttons
-    document.getElementById('startBtn').addEventListener('click', initGame);
-    document.getElementById('clearBtn').addEventListener('click', initGame);
-    document.getElementById('undoBtn').addEventListener('click', undoMove);
-    document.getElementById('applyAiBtn').addEventListener('click', applyAISuggestion);
+    startBtn.addEventListener('click', initGame);
+    undoBtn.addEventListener('click', undoMove);
+    makeMoveBtn.addEventListener('click', makeAIMove);
+    autoBlackBtn.addEventListener('click', toggleBlackAutoPlay);
+    autoWhiteBtn.addEventListener('click', toggleWhiteAutoPlay);
     
-    // AI toggle (if exists)
-    const aiToggle = document.getElementById('aiToggle');
-    if (aiToggle) {
-        // Set initial state - unchecked (disabled)
-        aiToggle.checked = aiEnabled;
-        
-        aiToggle.addEventListener('change', (e) => {
-            aiEnabled = e.target.checked;
-            if (!aiEnabled) {
-                aiSuggestionEl.textContent = 'AI Suggestions: Disabled';
-                // Set even probabilities when AI is disabled
-                whiteBarEl.style.width = '50%';
-                blackBarEl.style.width = '50%';
-                whiteBarEl.textContent = '50%';
-                blackBarEl.textContent = '50%';
-            } else {
-                scheduleEngineAnalysis();
-            }
-        });
-    }
-    
-    // Randomness slider (if exists)
-    const randomnessSlider = document.getElementById('randomnessSlider');
-    if (randomnessSlider) {
-        // Set initial state
-        randomnessSlider.value = aiRandomness;
-        
-        randomnessSlider.addEventListener('input', (e) => {
-            updateRandomness(e.target.value);
-        });
-        
-        // Initialize randomness level display
-        updateRandomness(aiRandomness);
-    }
+    // Set up AI worker event listeners
+    setupBlackAIWorkerEventListeners();
+    setupWhiteAIWorkerEventListeners();
     
     // Initialize the game
     initGame();
