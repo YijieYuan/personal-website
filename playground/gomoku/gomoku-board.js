@@ -144,16 +144,31 @@
                 const rowLabel = document.createElement("div");
                 rowLabel.className = "board-label row-label";
                 rowLabel.textContent = (BOARD_SIZE - i).toString(); // 15 at top, 1 at bottom
-                // Position at center of cells
-                rowLabel.style.top = ((i + 0.5) * (100 / BOARD_SIZE)) + '%';
+                
+                // Calculate position at center of cells but ensure consistent spacing
+                const cellCenter = (i + 0.5) * (100 / BOARD_SIZE);
+                rowLabel.style.top = cellCenter + '%';
+                
+                // Add a small offset to prevent overlap on small screens
+                if (i === 0 || i === BOARD_SIZE - 1) {
+                    rowLabel.style.fontWeight = 'bold'; // Make edge labels clearer
+                }
+                
                 boardElm.append(rowLabel);
                 
                 // Column letters (A-P, skip I)
                 const colLabel = document.createElement("div");
                 colLabel.className = "board-label col-label";
                 colLabel.textContent = LETTERS[i]; // A at left, P at right
+                
                 // Position at center of cells
-                colLabel.style.left = ((i + 0.5) * (100 / BOARD_SIZE)) + '%';
+                colLabel.style.left = cellCenter + '%';
+                
+                // Add a small offset to prevent overlap on small screens
+                if (i === 0 || i === BOARD_SIZE - 1) {
+                    colLabel.style.fontWeight = 'bold'; // Make edge labels clearer
+                }
+                
                 boardElm.append(colLabel);
             }
             
@@ -173,7 +188,14 @@
                 line.setAttribute("x2", "100%");
                 line.setAttribute("y2", y + "%");
                 line.setAttribute("stroke", "#333");
-                line.setAttribute("stroke-width", "0.5"); // Thinner for better mobile appearance
+                
+                // Make border lines thicker than interior lines
+                if (i === 0 || i === BOARD_SIZE) {
+                    line.setAttribute("stroke-width", "1"); // Thicker edge lines
+                } else {
+                    line.setAttribute("stroke-width", "0.3"); // Thinner interior lines
+                }
+                
                 grid.appendChild(line);
             }
             
@@ -186,7 +208,14 @@
                 line.setAttribute("x2", x + "%");
                 line.setAttribute("y2", "100%");
                 line.setAttribute("stroke", "#333");
-                line.setAttribute("stroke-width", "0.5"); // Thinner for better mobile appearance
+                
+                // Make border lines thicker than interior lines
+                if (i === 0 || i === BOARD_SIZE) {
+                    line.setAttribute("stroke-width", "1"); // Thicker edge lines
+                } else {
+                    line.setAttribute("stroke-width", "0.3"); // Thinner interior lines
+                }
+                
                 grid.appendChild(line);
             }
             

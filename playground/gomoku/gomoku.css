@@ -155,13 +155,24 @@ h1 {
     box-shadow: 0 0 0 max(2px, min(3px, 5%)) rgba(255, 0, 0, 0.5);
 }
 
-/* AI suggestion style - improved for mobile */
+/* AI suggestion style - consistent across all devices */
 .go-place.ai-suggestion {
-    background-color: transparent; 
-    border: min(4px, 1vw) dashed #7482ff; /* Scale border with viewport */
-    border-radius: 0;
-    outline: none;
-    box-shadow: none;
+    background-color: transparent;
+    position: relative;
+    border: none;
+}
+
+.go-place.ai-suggestion::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+    border: 3px dashed #7482ff; 
+    border-radius: 50%;
+    box-sizing: border-box;
+    z-index: 3;
 }
 
 /* Star points (dark dots) - more responsive */
@@ -390,14 +401,26 @@ footer {
     }
     
     .row-label {
-        left: -16px;
+        left: -20px; /* Increased spacing from edge */
         width: 14px;
     }
     
     .col-label {
-        bottom: -16px;
+        bottom: -20px; /* Increased spacing from edge */
         width: 14px;
     }
+    
+    /* Adjust board margins to match the increased label spacing */
+    #board {
+        margin-left: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .controls {
+        margin-left: 24px;
+        width: calc(100% - 24px);
+    }
+}
     
     /* Adjust section headers */
     .info-section h2 {
@@ -425,7 +448,7 @@ footer {
     .status-text {
         font-size: 12px;
     }
-}
+
 
 /* Touch-specific improvements to prevent accidental zoom/scroll */
 @media (pointer: coarse) {

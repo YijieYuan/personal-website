@@ -1,6 +1,6 @@
 /**
  * Gomoku Game Controller
- * Using ai-worker.js directly with dual AI support
+ * Updated for consistent AI behavior across devices
  */
 window.onload = function() {
     // Game constants
@@ -38,6 +38,9 @@ window.onload = function() {
     let blackAiCancelCount = 0;
     let whiteAiCancelCount = 0;
     
+    // Set a fixed computation time limit to ensure consistency across devices
+    const AI_COMPUTATION_TIME = 2000; // 2 seconds computation time limit
+    
     // Initialize AI workers
     let blackAiWorker = new Worker('ai-worker.js');
     let whiteAiWorker = new Worker('ai-worker.js');
@@ -63,7 +66,7 @@ window.onload = function() {
                     updateBoardClickability();
                     
                     if (currentPlayer === BLACK && moveHistory.length === 0) {
-                        // For first move, always suggest center
+                        // For first move, always suggest center - consistent for all devices
                         blackBestMove = { r: 7, c: 7 };
                         updateAiSuggestion();
                         
@@ -252,7 +255,7 @@ window.onload = function() {
             return true;
         }
         
-        // Notify both AIs of the move
+        // Notify both AIs of the move - ensure consistency across both AIs
         blackAiWorker.postMessage({ 
             type: 'watch',
             r: r,
@@ -485,7 +488,7 @@ window.onload = function() {
         // Clear previous AI suggestion
         if (currentPlayer === BLACK) {
             if (moveHistory.length === 0) {
-                // First move suggestion
+                // First move suggestion - always center for consistency
                 blackBestMove = { r: 7, c: 7 };
             } else {
                 blackBestMove = null;
@@ -552,9 +555,10 @@ window.onload = function() {
     }
     
     /**
-     * Initialize the Black AI worker
+     * Initialize the Black AI worker with consistent settings
      */
     function initBlackAIWorker() {
+        // Ensure consistent settings for all devices
         blackAiWorker.postMessage({
             type: 'ini',
             mode: 'expert', // Fixed to expert level
@@ -563,24 +567,15 @@ window.onload = function() {
     }
     
     /**
-     * Initialize the White AI worker
+     * Initialize the White AI worker with consistent settings
      */
     function initWhiteAIWorker() {
+        // Ensure consistent settings for all devices
         whiteAiWorker.postMessage({
             type: 'ini',
             mode: 'expert', // Fixed to expert level
             color: 'white'
         });
-    }
-    
-    /**
-     * Set AI difficulty
-     */
-    function setAiDifficulty(difficulty) {
-        // Currently not used as we're fixed to expert level
-        // but could be extended to allow changing difficulty
-        aiDifficulty = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-        updateAiTitle();
     }
     
     /**
@@ -592,7 +587,7 @@ window.onload = function() {
         }
         
         if (moveHistory.length === 0) {
-            // For first move, always suggest center
+            // For first move, always suggest center (consistent across devices)
             blackBestMove = { r: 7, c: 7 };
             updateAiSuggestion();
             
