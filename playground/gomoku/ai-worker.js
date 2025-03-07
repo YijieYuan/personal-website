@@ -72,8 +72,8 @@ ai.ini=function(mode,color){
         this.totry=[12,8];
         break;
         case 'expert':
-        this.depth=5;
-        this.totry=[12,8];
+        this.depth=7;
+        this.totry=[10,10];
         break;
         default:
         postMessage({'type': 'ini_error', 'reason': mode+' not supported'});
