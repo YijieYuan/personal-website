@@ -73,17 +73,18 @@ h1 {
 }
 
 /* Board Styling */
+/* Updated code */
 #board {
     width: 560px;
     height: 560px;
     margin: 0;
     position: relative;
     background-color: #e9bb7d;
-    border: 2px solid #333;
-    overflow: visible; /* Allow labels to be visible outside the board */
-    margin-left: 22px; /* Room for row labels */
-    margin-bottom: 22px; /* Room for column labels */
-    box-sizing: content-box; /* Ensure border doesn't affect dimensions */
+    /* Border removed - relying on SVG grid lines instead */
+    overflow: visible;
+    margin-left: 22px;
+    margin-bottom: 22px;
+    box-sizing: content-box;
 }
 
 .board-grid {
