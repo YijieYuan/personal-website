@@ -24,10 +24,12 @@
             
             // Calculate position - place in the center of cells with exact cell dimensions
             const s = elm.style;
-            s.position = 'absolute';
             
             // Position calculation for cell centers in a 15x15 grid
             const cellSize = 100 / BOARD_SIZE;
+            
+            // Set position as percentage for better responsiveness
+            s.position = 'absolute';
             s.top = (r * cellSize) + '%';  // Top of cell
             s.left = (c * cellSize) + '%'; // Left of cell
             s.width = cellSize + '%';      // Set width to match cell
@@ -36,7 +38,6 @@
             // Create inner stone element centered within the cell
             const inner = document.createElement("div");
             inner.className = "go";
-            // Positioning is now handled by CSS for better responsiveness
             
             elm.appendChild(inner);
             
@@ -395,6 +396,9 @@
             } else {
                 boardElm.addClass('desktop');
             }
+            
+            // Force a reflow to ensure proper positioning
+            boardElm[0].offsetHeight;
         };
         
         // Run initial screen size adjustment

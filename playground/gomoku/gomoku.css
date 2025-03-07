@@ -123,6 +123,10 @@ h1 {
     z-index: 10;
     cursor: pointer;
     box-sizing: border-box;
+    /* Stone positioning is now handled from JavaScript */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Improved stone styling - centered within cells */
@@ -136,6 +140,7 @@ h1 {
     border-radius: 50%;
     background-color: transparent;
     transition: background-color 0.2s;
+    box-sizing: border-box;
 }
 
 .go-place.set .go {
@@ -455,13 +460,25 @@ footer {
 
 /* Touch-specific improvements to prevent accidental zoom/scroll */
 @media (pointer: coarse) {
-    /* Increase tap target size for better touch accuracy */
+    /* Ensure stones are properly centered on touch devices */
     .go-place {
-        min-width: 6vw;
-        min-height: 6vw;
+        /* Explicitly center the contents */
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
-    /* Add extra padding to buttons for easier touch */
+    .go {
+        /* Ensure consistent stone appearance on mobile */
+        position: absolute;
+        width: 80%;
+        height: 80%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    /* Increase tap target size for better touch accuracy */
     .controls button {
         padding-top: 10px;
         padding-bottom: 10px;

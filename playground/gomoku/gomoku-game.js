@@ -1,6 +1,6 @@
 /**
  * Gomoku Game Controller
- * Updated for consistent AI behavior across devices
+ * Updated with randomized white responses
  */
 window.onload = function() {
     // Game constants
@@ -8,8 +8,6 @@ window.onload = function() {
     const N_IN_ROW = 5; // Five in a row to win
     const BLACK = 'black';
     const WHITE = 'white';
-    
-    // No time limit for AI computation
     
     // DOM elements
     const board = new GoBoard($('#board'));
@@ -44,6 +42,76 @@ window.onload = function() {
     let blackAiWorker = new Worker('ai-worker.js');
     let whiteAiWorker = new Worker('ai-worker.js');
     
+    // Predefined first moves for consistent behavior across devices
+    const PREDEFINED_MOVES = {
+        // Center position is always the first move for black
+        "first_black": { r: 7, c: 7 }
+    };
+    
+    /**
+     * Generate a random response for White's first move based on a strategy
+     * - If Black played center, choose one of the 8 surrounding positions randomly
+     * - If Black didn't play center, only consider positions that are:
+     *   1. Adjacent to the Black stone
+     *   2. Within the rectangle defined by the Black stone and the center
+     * @param {number} r - Row of the first black move
+     * @param {number} c - Column of the first black move
+     * @return {Object} The coordinates for white's response
+     */
+    function getRandomResponse(r, c) {
+        const centerR = 7;
+        const centerC = 7;
+        
+        // All possible surrounding positions to Black's stone
+        const surroundingPositions = [
+            {r: r-1, c: c-1}, // Northwest
+            {r: r-1, c: c},   // North
+            {r: r-1, c: c+1}, // Northeast
+            {r: r, c: c-1},   // West
+            {r: r, c: c+1},   // East
+            {r: r+1, c: c-1}, // Southwest
+            {r: r+1, c: c},   // South
+            {r: r+1, c: c+1}  // Southeast
+        ];
+        
+        // Filter out invalid positions (outside the board)
+        const validPositions = surroundingPositions.filter(pos => 
+            pos.r >= 0 && pos.r < BOARD_SIZE && 
+            pos.c >= 0 && pos.c < BOARD_SIZE
+        );
+        
+        // If Black played center, any of the 8 surrounding positions are valid
+        if (r === centerR && c === centerC) {
+            // Use true randomness instead of deterministic selection
+            const randomIndex = Math.floor(Math.random() * validPositions.length);
+            return validPositions[randomIndex];
+        }
+        
+        // Otherwise, determine the rectangle between Black stone and center
+        const minR = Math.min(r, centerR);
+        const maxR = Math.max(r, centerR);
+        const minC = Math.min(c, centerC);
+        const maxC = Math.max(c, centerC);
+        
+        // Filter positions that are within the rectangle
+        const positionsInRectangle = validPositions.filter(pos => 
+            pos.r >= minR && pos.r <= maxR &&
+            pos.c >= minC && pos.c <= maxC
+        );
+        
+        // Use the positions in rectangle if there are any, otherwise use all valid positions
+        const finalPositions = positionsInRectangle.length > 0 ? 
+                               positionsInRectangle : validPositions;
+        
+        // Make a truly random selection
+        const randomIndex = Math.floor(Math.random() * finalPositions.length);
+        
+        console.log("Valid positions for White's response:", finalPositions);
+        console.log("Selected position:", finalPositions[randomIndex]);
+        
+        return finalPositions[randomIndex];
+    }
+    
     /**
      * Update the AI Analysis section title to include difficulty
      */
@@ -65,8 +133,8 @@ window.onload = function() {
                     updateBoardClickability();
                     
                     if (currentPlayer === BLACK && moveHistory.length === 0) {
-                        // For first move, always suggest center - consistent for all devices
-                        blackBestMove = { r: 7, c: 7 };
+                        // First move is always the center for consistency
+                        blackBestMove = PREDEFINED_MOVES.first_black;
                         updateAiSuggestion();
                         
                         // Auto-play if enabled
@@ -149,6 +217,21 @@ window.onload = function() {
                     updateBoardClickability();
                     
                     if (currentPlayer === WHITE && !gameOver) {
+                        // If this is the first move for white (second move in the game)
+                        // Use a random response based on Black's first move
+                        if (moveHistory.length === 1) {
+                            const firstBlackMove = moveHistory[0];
+                            // Get a random response based on black's first move
+                            whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
+                            updateAiSuggestion();
+                            
+                            if (whiteAutoPlay && !gameOver) {
+                                setTimeout(() => {
+                                    makeMove(whiteBestMove.r, whiteBestMove.c);
+                                }, 500);
+                            }
+                            return;
+                        }
                         startWhiteAIAnalysis();
                     }
                     break;
@@ -164,7 +247,22 @@ window.onload = function() {
                     }
                     // Otherwise, if it's white's turn, start computation
                     else if (currentPlayer === WHITE && !gameOver) {
-                        startWhiteAIAnalysis();
+                        // If this is white's first move (2nd game move)
+                        if (moveHistory.length === 1) {
+                            // Use random response
+                            const firstBlackMove = moveHistory[0];
+                            whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
+                            updateAiSuggestion();
+                            
+                            if (whiteAutoPlay && !gameOver) {
+                                setTimeout(() => {
+                                    makeMove(whiteBestMove.r, whiteBestMove.c);
+                                }, 500);
+                            }
+                            whiteAiThinking = false;
+                        } else {
+                            startWhiteAIAnalysis();
+                        }
                     } else {
                         whiteAiThinking = false;
                     }
@@ -275,6 +373,21 @@ window.onload = function() {
         // Update status
         const playerName = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
         statusEl.textContent = `${playerName}'s turn.`;
+        
+        // Handle special cases for randomized AI behavior
+        if (moveHistory.length === 1 && currentPlayer === WHITE) {
+            // For white's first move, use a random response
+            const firstBlackMove = moveHistory[0];
+            whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
+            updateAiSuggestion();
+            
+            if (whiteAutoPlay && !gameOver) {
+                setTimeout(() => {
+                    makeMove(whiteBestMove.r, whiteBestMove.c);
+                }, 500);
+            }
+            return true;
+        }
         
         // Update AI suggestion for the new current player
         updateAiSuggestion();
@@ -484,16 +597,22 @@ window.onload = function() {
             board.clearLastMoveHighlight();
         }
         
-        // Clear previous AI suggestion
+        // Clear previous AI suggestion and set appropriate suggestion
         if (currentPlayer === BLACK) {
             if (moveHistory.length === 0) {
                 // First move suggestion - always center for consistency
-                blackBestMove = { r: 7, c: 7 };
+                blackBestMove = PREDEFINED_MOVES.first_black;
             } else {
                 blackBestMove = null;
             }
         } else {
-            whiteBestMove = null;
+            // For white's first move, generate random response
+            if (moveHistory.length === 1) {
+                const firstBlackMove = moveHistory[0];
+                whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
+            } else {
+                whiteBestMove = null;
+            }
         }
         
         // Update AI suggestion display
@@ -527,8 +646,11 @@ window.onload = function() {
         whiteAiThinking = false;
         blackAiCancelCount = 0;
         whiteAiCancelCount = 0;
-        blackBestMove = null;
+        
+        // Set initial suggestions for consistency
+        blackBestMove = PREDEFINED_MOVES.first_black;
         whiteBestMove = null;
+        
         statusEl.textContent = 'Black\'s turn.';
         moveHistoryEl.textContent = '';
         aiSuggestionEl.textContent = 'Initializing AI...';
@@ -587,7 +709,7 @@ window.onload = function() {
         
         if (moveHistory.length === 0) {
             // For first move, always suggest center (consistent across devices)
-            blackBestMove = { r: 7, c: 7 };
+            blackBestMove = PREDEFINED_MOVES.first_black;
             updateAiSuggestion();
             
             // Auto-play if enabled
@@ -611,6 +733,21 @@ window.onload = function() {
      */
     function startWhiteAIAnalysis() {
         if (gameOver || currentPlayer !== WHITE) {
+            return;
+        }
+        
+        // Check for special case - white's first move after black center
+        if (moveHistory.length === 1) {
+            const firstBlackMove = moveHistory[0];
+            whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
+            updateAiSuggestion();
+            
+            // Auto-play if enabled
+            if (whiteAutoPlay) {
+                setTimeout(() => {
+                    makeMove(whiteBestMove.r, whiteBestMove.c);
+                }, 500);
+            }
             return;
         }
         
