@@ -1,5 +1,6 @@
 /**
  * Gomoku Board UI Implementation
+ * Improved for mobile responsiveness
  */
 (function() {
     'use strict';
@@ -35,31 +36,42 @@
             // Create inner stone element centered within the cell
             const inner = document.createElement("div");
             inner.className = "go";
-            inner.style.position = 'absolute';
-            inner.style.top = '50%';
-            inner.style.left = '50%';
-            inner.style.transform = 'translate(-50%, -50%)';
+            // Positioning is now handled by CSS for better responsiveness
+            
             elm.appendChild(inner);
             
-            // Add click handler
-            elm.onclick = () => {
+            // Add click handler with better touch support
+            elm.onclick = (e) => {
                 // Only handle clicks if the position is valid
                 if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) {
                     board.clicked(r, c);
+                    e.preventDefault(); // Prevent zoom/scroll on mobile
                 }
             };
             
-            // Add touch support
+            // Improved touch support with handling for zoom and scroll prevention
             if ("ontouchstart" in window) {
                 let moved = false;
+                let startX, startY;
                 
                 elm.ontouchstart = (e) => {
                     moved = false;
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    e.preventDefault(); // Prevent zoom/scroll
                     return false;
                 };
                 
                 elm.ontouchmove = (e) => {
-                    moved = true;
+                    // Only consider it a move if there's significant movement
+                    // This prevents slight finger movements from canceling clicks
+                    const diffX = Math.abs(e.touches[0].clientX - startX);
+                    const diffY = Math.abs(e.touches[0].clientY - startY);
+                    
+                    if (diffX > 5 || diffY > 5) { // Threshold of 5 pixels
+                        moved = true;
+                    }
+                    e.preventDefault(); // Prevent zoom/scroll
                     return false;
                 };
                 
@@ -68,6 +80,7 @@
                         board.clicked(r, c);
                     }
                     moved = false;
+                    e.preventDefault(); // Prevent zoom/scroll
                     return false;
                 };
             }
@@ -123,6 +136,7 @@
             grid.setAttribute("class", "board-grid");
             grid.setAttribute("width", "100%");
             grid.setAttribute("height", "100%");
+            grid.setAttribute("viewBox", "0 0 100 100"); // Add viewBox for better scaling
             
             // Add row indices and column letters (outside grid container)
             for (let i = 0; i < BOARD_SIZE; i++) {
@@ -143,7 +157,7 @@
                 boardElm.append(colLabel);
             }
             
-            // Add background grid for cells - just for visual enhancement
+            // Add background grid for cells
             const background = document.createElementNS(svgNS, "rect");
             background.setAttribute("width", "100%");
             background.setAttribute("height", "100%");
@@ -159,7 +173,7 @@
                 line.setAttribute("x2", "100%");
                 line.setAttribute("y2", y + "%");
                 line.setAttribute("stroke", "#333");
-                line.setAttribute("stroke-width", "1");
+                line.setAttribute("stroke-width", "0.5"); // Thinner for better mobile appearance
                 grid.appendChild(line);
             }
             
@@ -172,7 +186,7 @@
                 line.setAttribute("x2", x + "%");
                 line.setAttribute("y2", "100%");
                 line.setAttribute("stroke", "#333");
-                line.setAttribute("stroke-width", "1");
+                line.setAttribute("stroke-width", "0.5"); // Thinner for better mobile appearance
                 grid.appendChild(line);
             }
             
@@ -203,6 +217,14 @@
             boardElm.append(frag);
         };
         
+        // Prevent default on touch events for the entire board to avoid unwanted zooming
+        boardElm.on('touchstart touchmove', function(e) {
+            // Allow scrolling in the move history, but prevent zoom/scroll on the board
+            if (!$(e.target).closest('.history-text').length) {
+                e.preventDefault();
+            }
+        });
+        
         // Initialize
         createGrid();
         initPlaces();
@@ -221,9 +243,9 @@
         this.setClickable = function(yes, color) {
             clickable = yes;
             if (yes) {
-                boardElm.addClass("playing");
+                boardElm.removeClass('disabled').addClass("playing");
             } else {
-                boardElm.removeClass("playing");
+                boardElm.removeClass("playing").addClass('disabled');
             }
             if (color) {
                 boardElm.removeClass("black").removeClass("white").addClass(color);
@@ -328,6 +350,31 @@
             const row = BOARD_SIZE - parseInt(str.substring(1), 10);
             return { r: row, c: col };
         };
+
+        // Add a method to help with screen size detection and adjustments
+        this.adjustForScreenSize = function() {
+            const isMobile = window.matchMedia('(max-width: 600px)').matches;
+            const isTablet = window.matchMedia('(max-width: 900px)').matches && !isMobile;
+            
+            // Apply different classes based on screen size
+            boardElm.removeClass('mobile tablet desktop');
+            
+            if (isMobile) {
+                boardElm.addClass('mobile');
+            } else if (isTablet) {
+                boardElm.addClass('tablet');
+            } else {
+                boardElm.addClass('desktop');
+            }
+        };
+        
+        // Run initial screen size adjustment
+        this.adjustForScreenSize();
+        
+        // Listen for resize events to adjust the UI
+        window.addEventListener('resize', () => {
+            this.adjustForScreenSize();
+        });
         
         return this;
     };

@@ -123,16 +123,21 @@ h1 {
     box-sizing: border-box; /* Include border in size calculation */
 }
 
+/* Responsive stone styling - using relative units instead of fixed pixels */
 .go {
-    width: 30px;
-    height: 30px;
+    position: absolute;
+    width: 80%;         /* Relative to the cell size instead of fixed 30px */
+    height: 80%;        /* Relative to the cell size instead of fixed 30px */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     border-radius: 50%;
     background-color: transparent;
     transition: background-color 0.2s;
 }
 
 .go-place.set .go {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Stone styles */
@@ -145,25 +150,26 @@ h1 {
     border: 1px solid #ccc;
 }
 
+/* Updated last move highlighting with relative units */
 .go-place.last-move .go {
-    box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.5);
+    box-shadow: 0 0 0 max(2px, min(3px, 5%)) rgba(255, 0, 0, 0.5);
 }
 
-/* AI suggestion style - dashed blue border with longer dashes */
+/* AI suggestion style - improved for mobile */
 .go-place.ai-suggestion {
-    background-color: transparent; /* No background fill */
-    border: 4px dashed #7482ff; /* Thicker dashed blue border for longer dashes */
-    border-radius: 0; /* Ensure straight edges */
+    background-color: transparent; 
+    border: min(4px, 1vw) dashed #7482ff; /* Scale border with viewport */
+    border-radius: 0;
     outline: none;
     box-shadow: none;
 }
 
-/* Star points (dark dots) */
+/* Star points (dark dots) - more responsive */
 .go-darkdot::after {
     content: '';
     position: absolute;
-    width: 8px;
-    height: 8px;
+    width: min(8px, 1.5vw);   /* Responsive width based on viewport width */
+    height: min(8px, 1.5vw);  /* Responsive height based on viewport width */
     background-color: #333;
     border-radius: 50%;
     top: 50%;
@@ -306,7 +312,7 @@ footer {
     font-size: 14px;
 }
 
-/* Responsive Design */
+/* Improved Responsive Design */
 @media (max-width: 900px) {
     body {
         padding: 10px;
@@ -324,25 +330,115 @@ footer {
     }
 
     #board {
-        width: 100%;
+        width: calc(100% - 22px); /* Account for label space */
         height: 0;
-        padding-bottom: 100%;
+        padding-bottom: calc(100% - 22px); /* Maintain square aspect ratio */
+        margin-left: 22px; /* Maintain space for labels */
+        margin-bottom: 22px; /* Maintain space for labels */
     }
 
     .info-section {
         width: 100%;
         max-width: 560px;
     }
+    
+    .controls {
+        width: calc(100% - 22px);
+        margin-left: 22px;
+    }
+    
+    /* Adjust label font size for smaller screens */
+    .board-label {
+        font-size: 11px;
+    }
+    
+    .row-label {
+        left: -18px;
+    }
+    
+    .col-label {
+        bottom: -18px;
+    }
 }
 
+/* Further improvements for very small screens */
 @media (max-width: 600px) {
+    body {
+        padding: 5px;
+    }
+    
+    h1 {
+        font-size: 24px;
+        margin: 15px 0;
+    }
+    
     .controls {
         flex-wrap: wrap;
+        gap: 4px;
     }
 
     .controls button {
-        flex: 1 1 calc(50% - 6px);
+        flex: 1 1 calc(50% - 4px);
         min-width: 0;
+        font-size: 12px;
+        padding: 6px 4px;
+    }
+    
+    /* Make board labels even smaller on very small screens */
+    .board-label {
+        font-size: 10px;
+    }
+    
+    .row-label {
+        left: -16px;
+        width: 14px;
+    }
+    
+    .col-label {
+        bottom: -16px;
+        width: 14px;
+    }
+    
+    /* Adjust section headers */
+    .info-section h2 {
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+    
+    /* Make info boxes more compact */
+    .game-status, .ai-section, .move-history {
+        padding: 12px;
+    }
+    
+    .history-text {
+        height: 120px;
+        font-size: 12px;
+        padding: 8px;
+    }
+    
+    .ai-suggestion {
+        font-size: 12px;
+        padding: 8px;
+    }
+    
+    /* Make status text smaller */
+    .status-text {
+        font-size: 12px;
+    }
+}
+
+/* Touch-specific improvements to prevent accidental zoom/scroll */
+@media (pointer: coarse) {
+    /* Increase tap target size for better touch accuracy */
+    .go-place {
+        min-width: 6vw;
+        min-height: 6vw;
+    }
+    
+    /* Add extra padding to buttons for easier touch */
+    .controls button {
+        padding-top: 10px;
+        padding-bottom: 10px;
     }
 }
 

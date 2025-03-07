@@ -14,6 +14,7 @@ window.onload = function() {
     const statusEl = document.getElementById('status');
     const moveHistoryEl = document.getElementById('moveHistory');
     const aiSuggestionEl = document.getElementById('aiSuggestion');
+    const aiSectionTitle = document.querySelector('.ai-section h2');
     const undoBtn = document.getElementById('undoBtn');
     const startBtn = document.getElementById('startBtn');
     const makeMoveBtn = document.getElementById('makeMoveBtn');
@@ -27,6 +28,7 @@ window.onload = function() {
     let boardClickable = true; // Flag to control board clickability
     
     // AI state
+    let aiDifficulty = 'Expert'; // Store the current AI difficulty
     let blackAutoPlay = false;
     let whiteAutoPlay = false;
     let blackBestMove = null;
@@ -39,6 +41,13 @@ window.onload = function() {
     // Initialize AI workers
     let blackAiWorker = new Worker('ai-worker.js');
     let whiteAiWorker = new Worker('ai-worker.js');
+    
+    /**
+     * Update the AI Analysis section title to include difficulty
+     */
+    function updateAiTitle() {
+        aiSectionTitle.textContent = `AI Analysis (${aiDifficulty})`;
+    }
     
     /**
      * Set up Black AI worker event listeners
@@ -522,6 +531,9 @@ window.onload = function() {
         moveHistoryEl.textContent = '';
         aiSuggestionEl.textContent = 'Initializing AI...';
         
+        // Update the AI title with difficulty level
+        updateAiTitle();
+        
         // Disable Make AI Move button initially
         makeMoveBtn.disabled = true;
         makeMoveBtn.classList.add('disabled');
@@ -559,6 +571,16 @@ window.onload = function() {
             mode: 'expert', // Fixed to expert level
             color: 'white'
         });
+    }
+    
+    /**
+     * Set AI difficulty
+     */
+    function setAiDifficulty(difficulty) {
+        // Currently not used as we're fixed to expert level
+        // but could be extended to allow changing difficulty
+        aiDifficulty = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+        updateAiTitle();
     }
     
     /**
