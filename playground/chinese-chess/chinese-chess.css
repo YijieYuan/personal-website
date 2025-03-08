@@ -229,6 +229,18 @@
   pointer-events: none; /* Allow clicking through */
 }
 
+
+/* Additional styles for status indication */
+.status-red {
+  color: #d40000;
+  font-weight: bold;
+}
+
+.status-black {
+  color: #000000;
+  font-weight: bold;
+}
+
 /* Media queries for responsiveness */
 @media (max-width: 900px) {
   .game-wrapper {

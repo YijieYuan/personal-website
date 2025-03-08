@@ -56,12 +56,20 @@ var flip = 0;
 
 // flip board
 function flipBoard() {
+  const selectedSquare = userSource;
   flip ^= 1;
-  drawBoard();  
+  drawBoard();
+  if (clickLock && selectedSquare) {
+    highlightMoves(selectedSquare);
+    addGlowToSelectedPiece(selectedSquare);
+  }
 }
 
 // render board in browser
 function drawBoard() {
+  // Clear any existing glow effects before redrawing
+  clearSelectedPieceGlow();
+  
   var chessBoard = '<table cellspacing="0" cellpadding="0"><tbody>'
   let isCCBridge = document.getElementById('xiangqiboard').style.backgroundImage.includes('ccbridge');
   
@@ -103,6 +111,11 @@ function drawBoard() {
 
   chessBoard += '</tbody></table>';
   document.getElementById('xiangqiboard').innerHTML = chessBoard;
+  
+  // Reapply the glow to the selected piece if one is selected
+  if (clickLock && userSource) {
+    addGlowToSelectedPiece(userSource);
+  }
 }
 
 // Add a function to clear all indicators when needed
@@ -152,6 +165,33 @@ function highlightMoves(square) {
       }
     }
   }
+}
+
+// Function to add glow effect to the selected piece
+function addGlowToSelectedPiece(square) {
+  const pieceElement = document.getElementById(square).querySelector('img');
+  if (pieceElement) {
+    // Check if it's a red or black piece
+    // In xiangqi.js, red pieces have odd piece codes, black pieces have even codes
+    // OR red is < 8, black is >= 8
+    const piece = engine.getPiece(square);
+    const isBlack = (piece & 8); // Bitwise AND with 8 (black pieces have this bit set)
+    
+    if (isBlack) {
+      pieceElement.classList.add('selected-piece-black');
+    } else {
+      pieceElement.classList.add('selected-piece-red');
+    }
+  }
+}
+
+// Function to clear glow effects
+function clearSelectedPieceGlow() {
+  const allPieces = document.querySelectorAll('.board img');
+  allPieces.forEach(piece => {
+    piece.classList.remove('selected-piece-red');
+    piece.classList.remove('selected-piece-black');
+  });
 }
 
 // set bot
@@ -238,51 +278,56 @@ var userSource, userTarget;
 // 3 fold repetitions
 var repetitions = 0;
 
-// pick piece handler
+// Modified drag piece handler with turn-based selection
 function dragPiece(event, square) {
-  userSource = square;
-  highlightMoves(square);
-}
-
-// drag piece handler
-function dragOver(event, square) {
-  event.preventDefault();
-  if (square == userSource) event.target.src = '';
-}
-
-// drop piece handler
-function dropPiece(event, square) {
-  userTarget = square;
-  let valid = validateMove(userSource, userTarget);  
-  movePiece(userSource, userTarget);
-  if (engine.getPiece(userTarget) == 0) valid = 0;
-  clickLock = 0;
+  const piece = engine.getPiece(square);
+  if (!piece) return;
   
-  if (engine.getPiece(square) && valid) {
-    userTime = Date.now() - userTime;
-    // Remove background color highlighting
-    playSound(valid);
-    updatePgn();
+  // Get current side to move (0 = red, 1 = black)
+  const currentSide = engine.getSide();
+  
+  // Check if piece exists and belongs to the current player
+  // In xiangqi.js, black pieces have the 8 bit set (piece & 8 is true for black)
+  const isPieceBlack = (piece & 8);
+  const isCorrectTurn = (currentSide === 0 && !isPieceBlack) || (currentSide === 1 && isPieceBlack);
+  
+  // Only allow dragging pieces of the current player's color
+  if (isCorrectTurn) {
+    userSource = square;
+    highlightMoves(square);
+    // No glow effect on drag as requested
+    event.dataTransfer.setData("text", square);
+  } else {
+    // Prevent dragging opponent's pieces
+    event.preventDefault();
   }
-  
-  event.preventDefault();
-  if (valid) setTimeout(function() { think(); }, 100);
 }
 
-// click event handler
-// Modified click event handler to improve piece selection behavior
+// Modified click event handler with piece glow effect and turn-based selection
 function tapPiece(square) {
   clearMoveIndicators();
+  // Also clear any existing glow effects
+  clearSelectedPieceGlow();
   
   var clickSquare = parseInt(square, 10);
+  const piece = engine.getPiece(clickSquare);
+  
+  // Get current side to move (0 = red, 1 = black)
+  const currentSide = engine.getSide();
+  
+  // Check if piece exists and belongs to the current player
+  // In xiangqi.js, black pieces have the 8 bit set (piece & 8 is true for black)
+  const isPieceBlack = piece && (piece & 8);
+  const isCorrectTurn = (currentSide === 0 && !isPieceBlack) || (currentSide === 1 && isPieceBlack);
   
   if (!clickLock) {
-    // First click - select a piece
-    if (engine.getPiece(clickSquare)) {
+    // First click - select a piece only if it's the correct player's turn
+    if (piece && isCorrectTurn) {
       userSource = clickSquare;
       clickLock = 1;
       drawBoard();
       highlightMoves(clickSquare);
+      addGlowToSelectedPiece(clickSquare);
     }
   } else {
     // Second click
@@ -290,12 +335,13 @@ function tapPiece(square) {
       // Clicking the same piece again - cancel selection
       clickLock = 0;
       drawBoard();
-    } else if (engine.getPiece(clickSquare) && 
-              (engine.getPiece(userSource) & 8) === (engine.getPiece(clickSquare) & 8)) {
+    } else if (piece && isCorrectTurn && 
+              (engine.getPiece(userSource) & 8) === (piece & 8)) {
       // Clicking another piece of the same color - switch selection to new piece
       userSource = clickSquare;
       drawBoard();
       highlightMoves(clickSquare);
+      addGlowToSelectedPiece(clickSquare);
     } else {
       // Clicking an empty square or an opponent's piece - try to move
       userTarget = clickSquare;
@@ -474,14 +520,28 @@ function validateMove(userSource, userTarget) {
  ============================              
 \****************************/
 
-// Update the game status
+// Update the game status with more descriptive messages
 function updateStatus() {
   let statusElement = document.getElementById('status');
   
   if (isGameOver()) {
     statusElement.innerText = gameResult;
+    return;
+  }
+  
+  // Current player's turn
+  const currentSide = engine.getSide();
+  
+  if (currentSide === 0) {
+    // Red's turn
+    statusElement.innerText = "Red to move";
+    // Add class for visual indication if needed
+    statusElement.className = "status-text status-red";
   } else {
-    statusElement.innerText = (engine.getSide() === 0) ? "Red to move" : "Black to move";
+    // Black's turn
+    statusElement.innerText = "Black to move";
+    // Add class for visual indication if needed
+    statusElement.className = "status-text status-black";
   }
 }
 
@@ -634,7 +694,7 @@ function updateAiSuggestion() {
           aiSuggestionElement.innerHTML += `<br><span class="current-eval">${currentEval}</span>`;
         }
       }
-    } else {
+    }else {
       aiSuggestionElement.innerHTML = "<strong>No suggestion available</strong>";
       lastSuggestedMove = 0;
       

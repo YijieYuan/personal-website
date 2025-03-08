@@ -11,6 +11,47 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../../style.css">
   <link rel="stylesheet" href="chinese-chess.css">
+  
+  <!-- Additional CSS for piece glow effects -->
+  <style>
+    /* Glow effect for selected piece */
+    .selected-piece-red {
+      filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.8));
+      animation: pulse-red 1.5s infinite;
+      z-index: 10;
+    }
+
+    .selected-piece-black {
+      filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8));
+      animation: pulse-black 1.5s infinite;
+      z-index: 10;
+    }
+
+    @keyframes pulse-red {
+      0% {
+        filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.8));
+      }
+      50% {
+        filter: drop-shadow(0 0 8px rgba(255, 50, 50, 0.9));
+      }
+      100% {
+        filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.8));
+      }
+    }
+
+    @keyframes pulse-black {
+      0% {
+        filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+      }
+      50% {
+        filter: drop-shadow(0 0 8px rgba(50, 50, 50, 0.9));
+      }
+      100% {
+        filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+      }
+    }
+  </style>
+  
   <script src="../../script.js" defer></script>
 </head>
 <body>
