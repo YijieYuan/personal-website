@@ -200,7 +200,7 @@ h1 {
     justify-content: flex-start; /* Align to left */
     margin-top: 0px; /* No gap between board and buttons */
     margin-left: 22px; /* Match the board's left margin (for the labels) */
-    flex-wrap: nowrap; /* Prevent wrapping to keep buttons side by side */
+    flex-wrap: wrap; /* Allow wrapping for better display */
 }
 
 .controls button {
@@ -216,6 +216,7 @@ h1 {
     min-width: 70px;
     flex: 1; /* Allow buttons to grow evenly */
     max-width: 110px; /* Prevent buttons from getting too wide */
+    margin-bottom: 4px; /* Add small bottom margin for wrapping */
 }
 
 .controls button:hover {
@@ -231,9 +232,29 @@ h1 {
     background: #c43e3e; /* Red color for stop button */
 }
 
+/* Toggle button styling */
+.toggle-btn {
+    background: #4a76a8;
+}
+
+.toggle-btn.active {
+    background: #8B4513; /* Brown color to indicate disabled state */
+}
+
+/* Disable AI toggle button - green for enabled, red for disabled */
+#toggleAiAnalysisBtn {
+    background: #4a76a8;
+}
+
+#toggleAiAnalysisBtn.active {
+    background: #8B4513;
+}
+
 /* Disabled button */
 .controls button.disabled,
-.controls button:disabled {
+.controls button:disabled,
+.toggle-btn.disabled,
+.toggle-btn:disabled {
     background: #aaa;
     cursor: not-allowed;
     opacity: 0.6;
@@ -386,7 +407,15 @@ footer {
     }
 
     .controls button {
-        flex: 1 1 calc(50% - 4px);
+        flex: 1 1 calc(33.33% - 4px);
+        min-width: 0;
+        font-size: 12px;
+        padding: 6px 4px;
+    }
+    
+    /* Make toggle buttons fit in the controls row */
+    .toggle-btn {
+        flex: 1 1 calc(33.33% - 4px);
         min-width: 0;
         font-size: 12px;
         padding: 6px 4px;

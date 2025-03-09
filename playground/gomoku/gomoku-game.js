@@ -1,6 +1,8 @@
 /**
  * Gomoku Game Controller
- * Updated with randomized white responses
+ * Updated with:
+ * 1. Visual hint toggle (can be changed anytime)
+ * 2. AI analysis toggle (can only be set before first move)
  */
 window.onload = function() {
     // Game constants
@@ -15,17 +17,22 @@ window.onload = function() {
     const moveHistoryEl = document.getElementById('moveHistory');
     const aiSuggestionEl = document.getElementById('aiSuggestion');
     const aiSectionTitle = document.querySelector('.ai-section h2');
+    const aiSection = document.querySelector('.ai-section');
     const undoBtn = document.getElementById('undoBtn');
     const startBtn = document.getElementById('startBtn');
     const makeMoveBtn = document.getElementById('makeMoveBtn');
     const autoBlackBtn = document.getElementById('autoBlackBtn');
     const autoWhiteBtn = document.getElementById('autoWhiteBtn');
+    const toggleVisualHintBtn = document.getElementById('toggleVisualHintBtn');
+    const toggleAiAnalysisBtn = document.getElementById('toggleAiAnalysisBtn');
     
     // Game state
     let currentPlayer = BLACK; // Black goes first
     let moveHistory = [];
     let gameOver = false;
     let boardClickable = true; // Flag to control board clickability
+    let showVisualSuggestion = true; // Default: show visual suggestion (dashed line)
+    let useAiAnalysis = true; // Default: use AI analysis
     
     // AI state
     let aiDifficulty = 'Expert'; // Store the current AI difficulty
@@ -120,11 +127,114 @@ window.onload = function() {
     }
     
     /**
+     * Toggle visual AI suggestion (dashed line on board)
+     * This can be changed at any time during the game
+     */
+    function toggleVisualHint() {
+        showVisualSuggestion = !showVisualSuggestion;
+        updateToggleVisualHintButton();
+        
+        // Update visual suggestion immediately
+        if (!showVisualSuggestion) {
+            board.clearSuggestion(); // Clear any visible suggestion on the board
+        } else if (useAiAnalysis) {
+            // Show suggestion if available and AI analysis is on
+            if (currentPlayer === BLACK && blackBestMove && !blackAutoPlay) {
+                board.showSuggestion(blackBestMove.r, blackBestMove.c);
+            } else if (currentPlayer === WHITE && whiteBestMove && !whiteAutoPlay) {
+                board.showSuggestion(whiteBestMove.r, whiteBestMove.c);
+            }
+        }
+    }
+
+    /**
+     * Update the toggle visual hint button text based on current state
+     */
+    function updateToggleVisualHintButton() {
+        if (showVisualSuggestion) {
+            toggleVisualHintBtn.textContent = "Hide Visual Hints";
+            toggleVisualHintBtn.classList.remove('active');
+        } else {
+            toggleVisualHintBtn.textContent = "Show Visual Hints";
+            toggleVisualHintBtn.classList.add('active');
+        }
+    }
+
+    /**
+     * Toggle AI analysis on/off
+     * Only allowed before first move is placed
+     */
+    function toggleAiAnalysis() {
+        // Only allow toggling before first move is placed
+        if (moveHistory.length > 0) {
+            return;
+        }
+        
+        useAiAnalysis = !useAiAnalysis;
+        updateToggleAiAnalysisButton();
+        
+        // Update UI state immediately based on AI toggle
+        if (useAiAnalysis) {
+            // Show AI section and enable AI buttons
+            aiSection.style.display = 'block';
+            makeMoveBtn.disabled = false;
+            makeMoveBtn.classList.remove('disabled');
+            
+            // Show visual suggestion if enabled
+            if (showVisualSuggestion && currentPlayer === BLACK && blackBestMove) {
+                board.showSuggestion(blackBestMove.r, blackBestMove.c);
+            }
+        } else {
+            // Hide AI section and disable AI buttons
+            aiSection.style.display = 'none';
+            makeMoveBtn.disabled = true;
+            makeMoveBtn.classList.add('disabled');
+            
+            // Turn off auto-play for both sides
+            blackAutoPlay = false;
+            whiteAutoPlay = false;
+            updateAutoPlayButtons();
+            
+            // Clear any visual suggestion
+            board.clearSuggestion();
+        }
+    }
+    
+    /**
+     * Update toggle AI analysis button based on current state
+     */
+    function updateToggleAiAnalysisButton() {
+        if (useAiAnalysis) {
+            toggleAiAnalysisBtn.textContent = "Disable AI";
+            toggleAiAnalysisBtn.classList.remove('active');
+        } else {
+            toggleAiAnalysisBtn.textContent = "Enable AI";
+            toggleAiAnalysisBtn.classList.add('active');
+        }
+    }
+    
+    /**
+     * Update AI toggle button state - disable after first move
+     */
+    function updateToggleAiAnalysisButtonState() {
+        if (moveHistory.length > 0) {
+            toggleAiAnalysisBtn.disabled = true;
+            toggleAiAnalysisBtn.classList.add('disabled');
+        } else {
+            toggleAiAnalysisBtn.disabled = false;
+            toggleAiAnalysisBtn.classList.remove('disabled');
+        }
+    }
+    
+    /**
      * Set up Black AI worker event listeners
      */
     function setupBlackAIWorkerEventListeners() {
         blackAiWorker.onmessage = function(e) {
             const data = e.data;
+            
+            // If AI analysis is disabled, ignore all AI messages
+            if (!useAiAnalysis) return;
             
             switch(data.type) {
                 case 'ini_complete':
@@ -209,6 +319,9 @@ window.onload = function() {
     function setupWhiteAIWorkerEventListeners() {
         whiteAiWorker.onmessage = function(e) {
             const data = e.data;
+            
+            // If AI analysis is disabled, ignore all AI messages
+            if (!useAiAnalysis) return;
             
             switch(data.type) {
                 case 'ini_complete':
@@ -329,12 +442,19 @@ window.onload = function() {
         // Update move history display
         updateMoveHistoryDisplay();
         
+        // Check if this is the first move, update AI analysis button state
+        if (moveHistory.length === 1) {
+            updateToggleAiAnalysisButtonState();
+        }
+        
         // Check for win
         if (checkWin(r, c, currentPlayer)) {
             gameOver = true;
             const winner = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
             statusEl.textContent = `Game over! ${winner} wins!`;
-            aiSuggestionEl.textContent = 'Game over';
+            if (useAiAnalysis) {
+                aiSuggestionEl.textContent = 'Game over';
+            }
             enableBoardClicks(); // Make sure board is enabled for viewing the final position
             updateUndoButtonState();
             updateAutoPlayButtons();
@@ -345,27 +465,32 @@ window.onload = function() {
         if (moveHistory.length === BOARD_SIZE * BOARD_SIZE) {
             gameOver = true;
             statusEl.textContent = 'Game over! It\'s a draw.';
-            aiSuggestionEl.textContent = 'Game over';
+            if (useAiAnalysis) {
+                aiSuggestionEl.textContent = 'Game over';
+            }
             enableBoardClicks(); // Make sure board is enabled for viewing the final position
             updateUndoButtonState();
             updateAutoPlayButtons();
             return true;
         }
         
-        // Notify both AIs of the move - ensure consistency across both AIs
-        blackAiWorker.postMessage({ 
-            type: 'watch',
-            r: r,
-            c: c,
-            color: currentPlayer
-        });
-        
-        whiteAiWorker.postMessage({ 
-            type: 'watch',
-            r: r,
-            c: c,
-            color: currentPlayer
-        });
+        // Only notify AI workers if AI analysis is enabled
+        if (useAiAnalysis) {
+            // Notify both AIs of the move - ensure consistency across both AIs
+            blackAiWorker.postMessage({ 
+                type: 'watch',
+                r: r,
+                c: c,
+                color: currentPlayer
+            });
+            
+            whiteAiWorker.postMessage({ 
+                type: 'watch',
+                r: r,
+                c: c,
+                color: currentPlayer
+            });
+        }
         
         // Switch player
         currentPlayer = (currentPlayer === BLACK) ? WHITE : BLACK;
@@ -374,8 +499,8 @@ window.onload = function() {
         const playerName = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
         statusEl.textContent = `${playerName}'s turn.`;
         
-        // Handle special cases for randomized AI behavior
-        if (moveHistory.length === 1 && currentPlayer === WHITE) {
+        // Handle special cases for randomized AI behavior when AI is enabled
+        if (useAiAnalysis && moveHistory.length === 1 && currentPlayer === WHITE) {
             // For white's first move, use a random response
             const firstBlackMove = moveHistory[0];
             whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
@@ -389,8 +514,10 @@ window.onload = function() {
             return true;
         }
         
-        // Update AI suggestion for the new current player
-        updateAiSuggestion();
+        // Update AI suggestion for the new current player (if AI is enabled)
+        if (useAiAnalysis) {
+            updateAiSuggestion();
+        }
         
         // Update board clickability based on whose turn it is
         updateBoardClickability();
@@ -496,9 +623,12 @@ window.onload = function() {
      * Update AI suggestion based on current player
      */
     function updateAiSuggestion() {
-        if (gameOver) {
-            aiSuggestionEl.textContent = 'Game over';
+        // If AI analysis is disabled or game is over, clear suggestion and return
+        if (!useAiAnalysis || gameOver) {
             board.clearSuggestion();
+            if (gameOver && useAiAnalysis) {
+                aiSuggestionEl.textContent = 'Game over';
+            }
             return;
         }
         
@@ -510,8 +640,8 @@ window.onload = function() {
                 const notation = board.coordToString(blackBestMove.r, blackBestMove.c);
                 aiSuggestionEl.textContent = `Black AI suggests: ${notation}`;
                 
-                // Show suggestion on the board if auto play is off
-                if (!blackAutoPlay) {
+                // Show suggestion on the board if auto play is off AND visual hints are enabled
+                if (!blackAutoPlay && showVisualSuggestion) {
                     board.showSuggestion(blackBestMove.r, blackBestMove.c);
                 } else {
                     board.clearSuggestion();
@@ -528,8 +658,8 @@ window.onload = function() {
                 const notation = board.coordToString(whiteBestMove.r, whiteBestMove.c);
                 aiSuggestionEl.textContent = `White AI suggests: ${notation}`;
                 
-                // Show suggestion on the board if auto play is off
-                if (!whiteAutoPlay) {
+                // Show suggestion on the board if auto play is off AND visual hints are enabled
+                if (!whiteAutoPlay && showVisualSuggestion) {
                     board.showSuggestion(whiteBestMove.r, whiteBestMove.c);
                 } else {
                     board.clearSuggestion();
@@ -548,12 +678,14 @@ window.onload = function() {
         // Don't allow undo if no moves to undo
         if (moveHistory.length === 0) return;
         
-        // If either AI is thinking, increment the cancel counter
-        if (blackAiThinking) {
-            blackAiCancelCount++;
-        }
-        if (whiteAiThinking) {
-            whiteAiCancelCount++;
+        // If AI analysis is enabled and AI is thinking, cancel it
+        if (useAiAnalysis) {
+            if (blackAiThinking) {
+                blackAiCancelCount++;
+            }
+            if (whiteAiThinking) {
+                whiteAiCancelCount++;
+            }
         }
         
         // Undo the last move
@@ -573,20 +705,23 @@ window.onload = function() {
         const playerName = currentPlayer.charAt(0).toUpperCase() + currentPlayer.slice(1);
         statusEl.textContent = `${playerName}'s turn.`;
         
-        // Notify both AIs of the undo
-        blackAiWorker.postMessage({ 
-            type: 'watch',
-            r: lastMove.r,
-            c: lastMove.c,
-            color: 'remove'
-        });
-        
-        whiteAiWorker.postMessage({ 
-            type: 'watch',
-            r: lastMove.r,
-            c: lastMove.c,
-            color: 'remove'
-        });
+        // If AI analysis is enabled, notify AI workers
+        if (useAiAnalysis) {
+            // Notify both AIs of the undo
+            blackAiWorker.postMessage({ 
+                type: 'watch',
+                r: lastMove.r,
+                c: lastMove.c,
+                color: 'remove'
+            });
+            
+            whiteAiWorker.postMessage({ 
+                type: 'watch',
+                r: lastMove.r,
+                c: lastMove.c,
+                color: 'remove'
+            });
+        }
         
         // Highlight the new last move if there is one
         if (moveHistory.length > 0) {
@@ -597,30 +732,34 @@ window.onload = function() {
             board.clearLastMoveHighlight();
         }
         
-        // Clear previous AI suggestion and set appropriate suggestion
-        if (currentPlayer === BLACK) {
-            if (moveHistory.length === 0) {
-                // First move suggestion - always center for consistency
-                blackBestMove = PREDEFINED_MOVES.first_black;
+        // If AI analysis is enabled, update suggestions
+        if (useAiAnalysis) {
+            // Clear previous AI suggestion and set appropriate suggestion
+            if (currentPlayer === BLACK) {
+                if (moveHistory.length === 0) {
+                    // First move suggestion - always center for consistency
+                    blackBestMove = PREDEFINED_MOVES.first_black;
+                } else {
+                    blackBestMove = null;
+                }
             } else {
-                blackBestMove = null;
+                // For white's first move, generate random response
+                if (moveHistory.length === 1) {
+                    const firstBlackMove = moveHistory[0];
+                    whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
+                } else {
+                    whiteBestMove = null;
+                }
             }
-        } else {
-            // For white's first move, generate random response
-            if (moveHistory.length === 1) {
-                const firstBlackMove = moveHistory[0];
-                whiteBestMove = getRandomResponse(firstBlackMove.r, firstBlackMove.c);
-            } else {
-                whiteBestMove = null;
-            }
+            
+            // Update AI suggestion display
+            updateAiSuggestion();
         }
-        
-        // Update AI suggestion display
-        updateAiSuggestion();
         
         // Update UI states
         updateBoardClickability();
         updateAutoPlayButtons();
+        updateToggleAiAnalysisButtonState();
     }
     
     /**
@@ -647,6 +786,16 @@ window.onload = function() {
         blackAiCancelCount = 0;
         whiteAiCancelCount = 0;
         
+        // Reset toggleable options to default
+        showVisualSuggestion = true;
+        useAiAnalysis = true;
+        updateToggleVisualHintButton();
+        updateToggleAiAnalysisButton();
+        updateToggleAiAnalysisButtonState();
+        
+        // Show AI section by default
+        aiSection.style.display = 'block';
+        
         // Set initial suggestions for consistency
         blackBestMove = PREDEFINED_MOVES.first_black;
         whiteBestMove = null;
@@ -657,6 +806,10 @@ window.onload = function() {
         
         // Update the AI title with difficulty level
         updateAiTitle();
+        
+        // Reset auto-play states
+        blackAutoPlay = false;
+        whiteAutoPlay = false;
         
         // Disable Make AI Move button initially
         makeMoveBtn.disabled = true;
@@ -670,9 +823,11 @@ window.onload = function() {
         updateMakeMoveButtonState();
         updateAutoPlayButtons();
         
-        // Initialize both AI workers
-        initBlackAIWorker();
-        initWhiteAIWorker();
+        // Initialize both AI workers if AI analysis is enabled
+        if (useAiAnalysis) {
+            initBlackAIWorker();
+            initWhiteAIWorker();
+        }
     }
     
     /**
@@ -703,7 +858,8 @@ window.onload = function() {
      * Start Black AI analysis
      */
     function startBlackAIAnalysis() {
-        if (gameOver || currentPlayer !== BLACK) {
+        // If AI analysis is disabled or game is over, do nothing
+        if (!useAiAnalysis || gameOver || currentPlayer !== BLACK) {
             return;
         }
         
@@ -732,7 +888,8 @@ window.onload = function() {
      * Start White AI analysis
      */
     function startWhiteAIAnalysis() {
-        if (gameOver || currentPlayer !== WHITE) {
+        // If AI analysis is disabled or game is over, do nothing
+        if (!useAiAnalysis || gameOver || currentPlayer !== WHITE) {
             return;
         }
         
@@ -778,7 +935,17 @@ window.onload = function() {
      * Update board clickability based on current state
      */
     function updateBoardClickability() {
-        // Determine if the board should be clickable
+        // If AI analysis is disabled, enable board clicks unless game is over
+        if (!useAiAnalysis) {
+            if (gameOver) {
+                disableBoardClicks();
+            } else {
+                enableBoardClicks();
+            }
+            return;
+        }
+
+        // With AI analysis enabled, determine if the board should be clickable
         const currentAiThinking = (currentPlayer === BLACK) ? blackAiThinking : whiteAiThinking;
         const currentAutoPlay = (currentPlayer === BLACK) ? blackAutoPlay : whiteAutoPlay;
         
@@ -810,6 +977,13 @@ window.onload = function() {
      * Update the make move button state
      */
     function updateMakeMoveButtonState() {
+        // If AI analysis is disabled, disable the make move button
+        if (!useAiAnalysis) {
+            makeMoveBtn.disabled = true;
+            makeMoveBtn.classList.add('disabled');
+            return;
+        }
+
         const currentBestMove = (currentPlayer === BLACK) ? blackBestMove : whiteBestMove;
         const currentAiThinking = (currentPlayer === BLACK) ? blackAiThinking : whiteAiThinking;
         
@@ -826,6 +1000,15 @@ window.onload = function() {
      * Update auto play buttons state
      */
     function updateAutoPlayButtons() {
+        // If AI analysis is disabled, disable auto play buttons
+        if (!useAiAnalysis) {
+            autoBlackBtn.disabled = true;
+            autoWhiteBtn.disabled = true;
+            autoBlackBtn.classList.add('disabled');
+            autoWhiteBtn.classList.add('disabled');
+            return;
+        }
+
         // Update Black AI auto play button
         if (blackAutoPlay) {
             autoBlackBtn.textContent = "Stop Black";
@@ -862,7 +1045,8 @@ window.onload = function() {
      * Toggle Black AI auto play
      */
     function toggleBlackAutoPlay() {
-        if (gameOver) return;
+        // If AI analysis is disabled or game is over, do nothing
+        if (!useAiAnalysis || gameOver) return;
         
         blackAutoPlay = !blackAutoPlay;
         updateAutoPlayButtons();
@@ -881,7 +1065,8 @@ window.onload = function() {
      * Toggle White AI auto play
      */
     function toggleWhiteAutoPlay() {
-        if (gameOver) return;
+        // If AI analysis is disabled or game is over, do nothing
+        if (!useAiAnalysis || gameOver) return;
         
         whiteAutoPlay = !whiteAutoPlay;
         updateAutoPlayButtons();
@@ -900,7 +1085,8 @@ window.onload = function() {
      * Make the current AI's suggested move
      */
     function makeAIMove() {
-        if (gameOver) return;
+        // If AI analysis is disabled or game is over, do nothing
+        if (!useAiAnalysis || gameOver) return;
         
         const currentBestMove = (currentPlayer === BLACK) ? blackBestMove : whiteBestMove;
         
@@ -926,6 +1112,8 @@ window.onload = function() {
     makeMoveBtn.addEventListener('click', makeAIMove);
     autoBlackBtn.addEventListener('click', toggleBlackAutoPlay);
     autoWhiteBtn.addEventListener('click', toggleWhiteAutoPlay);
+    toggleVisualHintBtn.addEventListener('click', toggleVisualHint);
+    toggleAiAnalysisBtn.addEventListener('click', toggleAiAnalysis);
     
     // Set up AI worker event listeners
     setupBlackAIWorkerEventListeners();
