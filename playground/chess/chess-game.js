@@ -14,6 +14,9 @@ window.onload = function() {
     let moveHistory = [];
     let gameOverByKingCapture = false;
     let aiEnabled = false;
+    
+    // Variables for click-to-move functionality
+    let selectedSquare = null;
 
     /**************************************************************
      * 2) Stockfish Engine Variables
@@ -246,40 +249,99 @@ window.onload = function() {
         // Update board & UI
         board.position(game.fen());
         updateStatus();
+        // Clear any selected square
+        clearSelection();
     }
 
     /**************************************************************
-     * 8) Usual Game Logic (King capture, Undo, etc.)
+     * 8) Click-to-Move Functionality
      **************************************************************/
-    function onDragStart(source, piece) {
-        if (gameOverByKingCapture) return false;
-        if (game.game_over()) return false;
-        // Only pick up pieces for the side to move
-        if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-            (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-            return false;
+    function clearSelection() {
+        selectedSquare = null;
+        removeHighlights();
+    }
+
+    function removeHighlights() {
+        $('.square-55d63').removeClass('highlight1-32417 highlight2-9c5d2');
+    }
+
+    function highlightSquare(square) {
+        removeHighlights();
+        
+        // Highlight the selected square
+        $('.square-' + square).addClass('highlight1-32417');
+        
+        // Get and highlight possible moves for this piece
+        const moves = game.moves({
+            square: square,
+            verbose: true
+        });
+        
+        // Highlight possible destinations
+        for (let i = 0; i < moves.length; i++) {
+            $('.square-' + moves[i].to).addClass('highlight2-9c5d2');
         }
     }
 
-    function onDrop(source, target) {
-        // see if the move is legal
-        const move = game.move({
-            from: source,
-            to: target,
-            promotion: 'q'
-        });
-
-        // if illegal, snap back
-        if (move === null) return 'snapback';
-
-        // store AFTER move is made
-        moveHistory.push(move);
+    function handleSquareClick(square) {
+        // If game is over, do nothing
+        if (gameOverByKingCapture || game.game_over()) return;
         
-        updateStatus();
-    }
-
-    function onSnapEnd() {
-        board.position(game.fen());
+        // If a square is already selected
+        if (selectedSquare !== null) {
+            // If clicking the same square, deselect it
+            if (square === selectedSquare) {
+                clearSelection();
+                return;
+            }
+            
+            // Try to make a move from selected square to this square
+            const move = game.move({
+                from: selectedSquare,
+                to: square,
+                promotion: 'q' // Default to queen for simplicity
+            });
+            
+            // If move is illegal, check if this square has a valid piece for the current player
+            if (move === null) {
+                const position = game.board();
+                const row = 8 - parseInt(square[1]);
+                const col = square.charCodeAt(0) - 'a'.charCodeAt(0);
+                
+                if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+                    const piece = position[row][col];
+                    
+                    if (piece && piece.color === game.turn()) {
+                        // It's a valid piece for the current player, select it instead
+                        selectedSquare = square;
+                        highlightSquare(square);
+                    }
+                }
+                return;
+            }
+            
+            // Move was successful
+            moveHistory.push(move);
+            clearSelection();
+            board.position(game.fen());
+            updateStatus();
+            return;
+        }
+        
+        // No piece was previously selected - check if this square has a piece
+        const position = game.board();
+        const row = 8 - parseInt(square[1]);
+        const col = square.charCodeAt(0) - 'a'.charCodeAt(0);
+        
+        if (row >= 0 && row < 8 && col >= 0 && col < 8) {
+            const piece = position[row][col];
+            
+            // If there's a piece and it belongs to the player whose turn it is
+            if (piece && piece.color === game.turn()) {
+                selectedSquare = square;
+                highlightSquare(square);
+            }
+        }
     }
 
     // check if a king is missing, checkmate/draw, etc.
@@ -337,6 +399,9 @@ window.onload = function() {
             // game is over
             updateWinPrediction();
         }
+        
+        // Reset selection whenever the board updates
+        clearSelection();
     }
 
     /**************************************************************
@@ -344,14 +409,20 @@ window.onload = function() {
      **************************************************************/
     const config = {
         pieceTheme: 'chesspieces/{piece}.png',
-        draggable: true,
-        position: 'start',
-        onDragStart: onDragStart,
-        onDrop: onDrop,
-        onSnapEnd: onSnapEnd
+        draggable: false, // Disable dragging completely
+        position: 'start'
     };
+    
     board = Chessboard('board', config);
     updateStatus();
+    
+    // Set up click handlers
+    $('#board').on('click', '.square-55d63', function() {
+        const square = $(this).data('square');
+        if (square) {
+            handleSquareClick(square);
+        }
+    });
 
     // Toggle AI
     document.getElementById('aiToggle').addEventListener('change', (e) => {
