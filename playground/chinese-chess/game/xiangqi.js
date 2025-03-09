@@ -27,6 +27,10 @@ var book = [];
 var botName = '';
 // Store the last suggested move globally
 var lastSuggestedMove = 0;
+// Last moved piece tracking removed
+// Variables for autoplay
+var autoplayEnabled = false;
+var autoplaySide = -1; // -1 = none, 0 = red, 1 = black
 
 
 /****************************\
@@ -62,6 +66,46 @@ function flipBoard() {
   if (clickLock && selectedSquare) {
     highlightMoves(selectedSquare);
     addGlowToSelectedPiece(selectedSquare);
+  }
+}
+
+// Last moved piece functions removed
+
+// Toggle AI autoplay
+function toggleAutoplay() {
+  const autoplayBtn = document.getElementById('autoplayBtn');
+  const statusSpan = document.getElementById('autoplayStatus');
+  
+  if (!autoplayEnabled) {
+    // Enable autoplay for current side
+    autoplayEnabled = true;
+    autoplaySide = engine.getSide();
+    
+    // Update UI
+    autoplayBtn.innerText = "AI Autoplay: On";
+    autoplayBtn.classList.add('active');
+    
+    // Update status
+    statusSpan.innerText = autoplaySide ? "Black" : "Red";
+    statusSpan.className = autoplaySide ? "black" : "red";
+    
+    // Start AI move if it's AI's turn
+    if (engine.getSide() === autoplaySide) {
+      userTime = 0;
+      think();
+    }
+  } else {
+    // Disable autoplay
+    autoplayEnabled = false;
+    autoplaySide = -1;
+    
+    // Update UI
+    autoplayBtn.innerText = "AI Autoplay: Off";
+    autoplayBtn.classList.remove('active');
+    
+    // Update status
+    statusSpan.innerText = "None";
+    statusSpan.className = "";
   }
 }
 
@@ -116,6 +160,8 @@ function drawBoard() {
   if (clickLock && userSource) {
     addGlowToSelectedPiece(userSource);
   }
+  
+  // Last moved piece highlighting removed
 }
 
 // Add a function to clear all indicators when needed
@@ -275,7 +321,7 @@ var clickLock = 0;
 var allowBook = 1;
 var userSource, userTarget;
 
-// 3 fold repetitions
+// 3 fold repetitions - kept for compatibility but no longer used for game termination
 var repetitions = 0;
 
 // Modified drag piece handler with turn-based selection
@@ -293,6 +339,12 @@ function dragPiece(event, square) {
   
   // Only allow dragging pieces of the current player's color
   if (isCorrectTurn) {
+    // If auto-play is enabled for the current side, don't allow manual moves
+    if (autoplayEnabled && autoplaySide === currentSide) {
+      event.preventDefault();
+      return;
+    }
+    
     userSource = square;
     highlightMoves(square);
     // No glow effect on drag as requested
@@ -314,6 +366,11 @@ function tapPiece(square) {
   
   // Get current side to move (0 = red, 1 = black)
   const currentSide = engine.getSide();
+  
+  // Don't allow manual moves if autoplay is enabled for current side
+  if (autoplayEnabled && autoplaySide === currentSide) {
+    return;
+  }
   
   // Check if piece exists and belongs to the current player
   // In xiangqi.js, black pieces have the 8 bit set (piece & 8 is true for black)
@@ -403,22 +460,22 @@ function getBookMove() {
   return 0;
 }
 
-// check for game state
+// check for game state - MODIFIED to use more user-friendly game over messages
 function isGameOver() {
-  if (engine.isRepetition()) repetitions++;
-  if (repetitions >= 3) {
-    gameResult = '3 fold repetition ' + (engine.getSide() ? 'black' : 'red') + ' lost';
-    return 1;
-  } else if (engine.generateLegalMoves().length == 0) {
-    gameResult = (engine.getSide() ? '1-0' : '0-1') + ' mate';
+  // REMOVED: Repetition detection code
+  // if (engine.isRepetition()) repetitions++;
+  // if (repetitions >= 3) {
+  //   gameResult = '3 fold repetition ' + (engine.getSide() ? 'black' : 'red') + ' lost';
+  //   return 1;
+  // }
+  
+  // Only check for checkmate and 60-move rule with improved messages
+  if (engine.generateLegalMoves().length == 0) {
+    // If side is 1 (black to move), then red wins; if side is 0 (red to move), then black wins
+    gameResult = engine.getSide() ? 'Red wins by checkmate!' : 'Black wins by checkmate!';
     return 1;
   } else if (engine.getSixty() >= 120) {
-    gameResult = '1/2-1/2 Draw by 60 rule move';
-    return 1;
-  } // TODO: material draw?
-
-  if (engine.generateLegalMoves().length == 0) {
-    gameResult = (engine.getSide() ? '1-0' : '0-1') + ' mate';
+    gameResult = 'Draw by 60-move rule';
     return 1;
   }
   
@@ -427,7 +484,11 @@ function isGameOver() {
 
 // engine move
 function think() {
-  if (isGameOver()) {updatePgn(); return;}
+  // Even if game is over, we'll update the PGN but continue
+  if (isGameOver()) {
+    updatePgn();
+    // REMOVED: return statement - AI can still move after game is technically over
+  }
   
   if (document.getElementById('editMode').checked == true) return;
   
@@ -443,7 +504,8 @@ function think() {
       drawBoard();
       
       if (engine.getPiece(targetSquare)) {
-        // Remove background color highlighting
+        // Last moved piece effect removed
+        
         playSound(bestMove);
         updatePgn();
         userTime = Date.now();
@@ -468,7 +530,9 @@ function think() {
       drawBoard();
       
       if (engine.getPiece(targetSquare)) {
-        // Remove background color highlighting
+        // Apply glow effect to the moved piece
+        addGlowToLastMovedPiece(targetSquare);
+        
         playSound(bestMove);
         updatePgn();
         userTime = Date.now();
@@ -477,22 +541,26 @@ function think() {
   }
 }
 
-// move piece in GUI
+// move piece in GUI - MODIFIED to add glow effect to last moved piece
 function movePiece(userSource, userTarget) {
   let moveString = engine.squareToString(userSource) +
                    engine.squareToString(userTarget);
 
-  if (isGameOver() == 0) engine.loadMoves(moveString);
-  else updatePgn();
+  // Always load moves, regardless of game state
+  engine.loadMoves(moveString);
   drawBoard();
+  
+  // Last moved piece highlighting removed
 }
 
-// take move back
+// take move back - MODIFIED to reset game state and allow continued play
 function undo() {
+  // Reset game result to allow continued play
   gameResult = '*';
   try {
     engine.takeBack();
     drawBoard();
+    // Last moved piece tracking removed
     // Reset the last suggested move because the position has changed
     lastSuggestedMove = 0;
     // Update the UI
@@ -545,7 +613,7 @@ function updateStatus() {
   }
 }
 
-// Updated updatePgn function to remove time information
+// Updated updatePgn function with improved game result display
 function updatePgn() {
   let pgn = '';
   let moveStack = engine.moveStack();
@@ -586,10 +654,9 @@ function updatePgn() {
   let gameMoves = document.getElementById('pgn');
   gameMoves.innerText = pgn;
   
-  if (gameResult == '1-0 Mate' || gameResult == '0-1 Mate') {
-    gameMoves.innerText += '# ' + gameResult;
-  } else if (gameResult != '*') {
-    gameMoves.innerText += ' ' + gameResult;
+  // Add game result with improved formatting
+  if (gameResult && gameResult != '*') {
+    gameMoves.innerText += '\n' + gameResult;
   }
   
   // Update game status
@@ -600,16 +667,22 @@ function updatePgn() {
   
   // Always update AI suggestion
   updateAiSuggestion();
+  
+  // Check if autoplay is enabled and it's AI's turn
+  if (autoplayEnabled && engine.getSide() === autoplaySide) {
+    setTimeout(function() { userTime = 0; think(); }, 500);
+  }
 }
 
 // Update AI suggestion and store the suggested move
 function updateAiSuggestion() {
   let aiSuggestionElement = document.getElementById('aiSuggestion');
   
+  // MODIFIED: Allow AI suggestions even when game is over
   if (isGameOver()) {
-    aiSuggestionElement.innerHTML = "<strong>Game over</strong>";
-    lastSuggestedMove = 0;
-    return;
+    // Still allow analysis when game is over
+    aiSuggestionElement.innerHTML = "<strong>Game is over, but still analyzing...</strong>";
+    // Don't return - continue with analysis
   }
 
   // Show that analysis is in progress
@@ -694,7 +767,7 @@ function updateAiSuggestion() {
           aiSuggestionElement.innerHTML += `<br><span class="current-eval">${currentEval}</span>`;
         }
       }
-    }else {
+    } else {
       aiSuggestionElement.innerHTML = "<strong>No suggestion available</strong>";
       lastSuggestedMove = 0;
       
@@ -732,6 +805,20 @@ function newGame() {
   repetitions = 0;
   // Reset the last suggested move
   lastSuggestedMove = 0;
+  // Last moved piece tracking removed
+  
+  // Reset autoplay when starting a new game
+  if (autoplayEnabled) {
+    // Update autoplay for the current side (which is now red/0)
+    autoplaySide = 0; // Red starts in a new game
+    document.getElementById('autoplayStatus').innerText = "Red";
+    document.getElementById('autoplayStatus').className = "red";
+    
+    // If autoplay is enabled for red, trigger AI move
+    if (autoplayEnabled) {
+      setTimeout(function() { userTime = 0; think(); }, 500);
+    }
+  }
   
   // Update status and AI suggestion
   updateStatus();

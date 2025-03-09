@@ -109,6 +109,32 @@
   background: #3a6594;
 }
 
+/* Autoplay button style when active */
+#autoplayBtn.active {
+  background: #e74c3c;
+}
+
+/* Autoplay status */
+.autoplay-status {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #555;
+  text-align: center;
+  padding: 8px;
+  background: #f0f4f8;
+  border-radius: 4px;
+}
+
+#autoplayStatus.red {
+  font-weight: bold;
+  color: #d40000;
+}
+
+#autoplayStatus.black {
+  font-weight: bold;
+  color: #000000;
+}
+
 /* Redesigned level selector with pills - fixed width */
 .level-selector {
   display: flex;
@@ -240,6 +266,45 @@
   color: #000000;
   font-weight: bold;
 }
+
+/* Glow effect for selected piece */
+.selected-piece-red {
+  filter: drop-shadow(0 0 5px rgba(255, 0, 0, 0.8));
+  animation: pulse-red 1.5s infinite;
+  z-index: 10;
+}
+
+.selected-piece-black {
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8));
+  animation: pulse-black 1.5s infinite;
+  z-index: 10;
+}
+
+@keyframes pulse-red {
+  0% {
+    filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(255, 50, 50, 0.9));
+  }
+  100% {
+    filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.8));
+  }
+}
+
+@keyframes pulse-black {
+  0% {
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(50, 50, 50, 0.9));
+  }
+  100% {
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.8));
+  }
+}
+
+/* Last moved piece effect removed */
 
 /* Media queries for responsiveness */
 @media (max-width: 900px) {
