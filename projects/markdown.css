@@ -1,0 +1,263 @@
+/**
+ * markdown-content.css
+ * Academic markdown styling inspired by lil-log
+ */
+
+/* Typography and base styles */
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400;1,700&family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* Main content container */
+.post {
+  max-width: 100%;
+  margin: 0 auto;
+  /* padding: 0 1.5rem; */
+  box-sizing: border-box;
+}
+
+.post-header {
+  margin: 3rem 0 2.5rem;
+  text-align: center;
+}
+
+.post-title {
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  font-size: 2.0rem;
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.post-meta {
+  font-family: 'Lato', sans-serif;
+  font-size: 1.1rem;
+  color: #777;
+  margin-bottom: 0;
+}
+
+/* Main content styling */
+.post-content {
+  font-family: 'Merriweather', serif;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #333;
+}
+
+/* Headings */
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6 {
+  font-family: 'Lato', sans-serif;
+  font-weight: 700;
+  margin-top: 2em;
+  margin-bottom: 0.8em;
+  line-height: 1.3;
+  color: #333;
+}
+
+.post-content h2 {
+  font-size: 1.6rem;
+  padding-bottom: 0.3em;
+}
+
+.post-content h3 {
+  font-size: 1.35rem;
+}
+
+.post-content h4 {
+  font-size: 1.2rem;
+}
+
+/* Text elements */
+.post-content p {
+  margin-bottom: 1.2em;
+  text-align: justify;
+}
+
+.post-content a {
+  color: #0076df;
+  text-decoration: none;
+  border-bottom: 1px solid #0076df;
+}
+
+.post-content a:hover {
+  color: #0056b3;
+  border-bottom: 2px solid #0056b3;
+}
+
+.post-content strong {
+  font-weight: 700;
+}
+
+.post-content em {
+  font-style: italic;
+}
+
+/* Lists */
+.post-content ul,
+.post-content ol {
+  margin: 0 0 1.2em 1.5em;
+}
+
+.post-content li {
+  margin-bottom: 0.4em;
+}
+
+.post-content li > ul,
+.post-content li > ol {
+  margin-top: 0.4em;
+  margin-bottom: 0;
+}
+
+/* Code blocks */
+.post-content pre,
+.post-content code {
+  font-family: 'Source Code Pro', Consolas, Monaco, 'Andale Mono', monospace;
+  font-size: 0.9rem;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+.post-content code {
+  padding: 0.15em 0.3em;
+  margin: 0 0.05em;
+}
+
+.post-content pre {
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1.5em;
+  line-height: 1.45;
+  border: 1px solid #e8e8e8;
+}
+
+.post-content pre > code {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background-color: transparent;
+}
+
+/* Blockquotes */
+.post-content blockquote {
+  border-left: 4px solid #e8e8e8;
+  padding: 0 1.2em;
+  color: #777;
+  margin: 1.5em 0;
+}
+
+.post-content blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Images and figures */
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5em auto;
+}
+
+.post-content figure {
+  margin: 2em 0;
+  text-align: center;
+}
+
+.fullwidth-figure {
+  margin: 2em -1.5em;
+  text-align: center;
+}
+
+.fullwidth-figure img {
+  max-width: 100%;
+  height: auto;
+}
+
+.post-content figcaption {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.7em;
+  font-style: italic;
+  text-align: center;
+  line-height: 1.5;
+  padding: 0 1.5em;
+}
+
+/* Tables */
+.post-content table {
+  margin: 1.5em 0;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.95em;
+}
+
+.post-content table th,
+.post-content table td {
+  padding: 0.5em 0.7em;
+  border: 1px solid #e1e4e8;
+}
+
+.post-content table th {
+  background-color: #f6f8fa;
+  font-weight: 600;
+  text-align: left;
+}
+
+.post-content table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* Horizontal rule */
+.post-content hr {
+  height: 1px;
+  margin: 2em 0;
+  background-color: #eee;
+  border: none;
+}
+
+/* Footnotes */
+.footnotes {
+  font-size: 0.9rem;
+  color: #777;
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid #eee;
+}
+
+/* Table of contents */
+.table-of-contents {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 1em 1.5em;
+  margin: 1.5em 0;
+  font-family: 'Lato', sans-serif;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .post {
+    padding: 0 1rem;
+  }
+  
+  .post-title {
+    font-size: 1.8rem;
+  }
+  
+  .post-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .post-content h3 {
+    font-size: 1.25rem;
+  }
+  
+  .fullwidth-figure {
+    margin: 1.5em -1rem;
+  }
+}

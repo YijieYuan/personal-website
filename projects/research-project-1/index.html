@@ -4,17 +4,18 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Physics Informed Image Restoration</title>
-
   <!-- Keep these preconnects -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-
-  <!-- 1) Add "Inter" alongside "Source Code Pro" -->
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet"/>
-
+  <!-- Font imports -->
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet"/>
   <!-- Existing CSS links -->
   <link rel="stylesheet" href="../../style.css"/>
-  <link rel="stylesheet" href="../article.css"/> <!-- NEW -->
+  <link rel="stylesheet" href="../../navbar.css"/>
+  <!-- Academic markdown styling (removing article.css) -->
+  <link rel="stylesheet" href="../../projects/markdown.css"/>
+  <link rel="stylesheet" href="../../projects/code-highlighting.css"/>
+  <link rel="stylesheet" href="../../projects/math-style.css"/>
   <script src="../../script.js" defer></script>
 
 </head>
@@ -29,32 +30,26 @@
       </ul>
     </nav>
   </header>
-
-  <div class="project-container">
-    <h1>Physics Informed Image Restoration</h1>
-    <p class="meta-info">Date: February 3, 2025 | Author: Yijie Yuan</p>
-
-    <p> Most deep learning image restoration approaches rely on blind deconvolution without access to the forward model. In medical imaging, such as CT, these characteristics can often be measured or predicted, offering valuable information that has the potential to enhance performance.
-
-      One strategy combines deep learning with known image quality models through model-based deconvolution with a deep learning prior. However, the direct one-step method, which uses blur and noise kernels as inputs to an end-to-end NN, remains challenging. In this work, we introduce a multi-input CNN variant that leverages image quality characteristics, such as blur and noise kernels, as auxiliary inputs to improve restoration performance. While one might assume that a general network structure with conditional inputs could address this issue, we found that it was not the case... </p>
-
-    <h2>Background</h2>
-    <p>Image restoration is a crucial task in medical imaging to recover lost details in images affected by noise and blur.</p>
-
-    <h2>Methods</h2>
-    <p>Our approach uses a deep CNN that incorporates physics-based priors to improve restoration fidelity.</p>
-
-    <h2>Results</h2>
-    <p>The model significantly outperforms traditional methods in PSNR and SSIM scores.</p>
-
-    <h2>Conclusion</h2>
-    <p>Physics-informed deep learning can enhance medical image restoration accuracy.</p>
-
-    <div class="project-divider"></div>
+  <div class="post">
+    <header class="post-header">
+      <h1 class="post-title">Physics Informed Image Restoration</h1>
+      <p class="post-meta">Date: February 3, 2025 | Author: Yijie Yuan</p>
+    </header>
+    <div class="post-content">
+      <p>Most deep learning image restoration approaches rely on blind deconvolution without access to the forward model. In medical imaging, such as CT, these characteristics can often be measured or predicted, offering valuable information that has the potential to enhance performance.
+        One strategy combines deep learning with known image quality models through model-based deconvolution with a deep learning prior. However, the direct one-step method, which uses blur and noise kernels as inputs to an end-to-end NN, remains challenging. In this work, we introduce a multi-input CNN variant that leverages image quality characteristics, such as blur and noise kernels, as auxiliary inputs to improve restoration performance. While one might assume that a general network structure with conditional inputs could address this issue, we found that it was not the case...</p>
+      <h2>Background</h2>
+      <p>Image restoration is a crucial task in medical imaging to recover lost details in images affected by noise and blur.</p>
+      <h2>Methods</h2>
+      <p>Our approach uses a deep CNN that incorporates physics-based priors to improve restoration fidelity.</p>
+      <h2>Results</h2>
+      <p>The model significantly outperforms traditional methods in PSNR and SSIM scores.</p>
+      <h2>Conclusion</h2>
+      <p>Physics-informed deep learning can enhance medical image restoration accuracy.</p>
+    </div>
   </div>
-
   <footer>
-    &copy; 2025 Yijie Yuan.
+    &copy; Yijie Yuan.
   </footer>
 </body>
 </html>

@@ -1,6 +1,7 @@
-/* Override paragraph styles for better readability in projects.html */
+/* Project-specific styling */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
+/* Override paragraph styles for better readability in projects.html */
 p {
     font-family: 'Inter', sans-serif;
     font-size: 1.1rem;
@@ -17,6 +18,7 @@ p {
     color: #555; /* Distinct blue */
     margin-top: 5px; /* Reduced gap above */
     margin-bottom: -10px; /* Reduced gap below */
+    font-weight: bold;
 }
 
 .publications-list {
@@ -30,3 +32,43 @@ p {
     margin-bottom: 5px; /* Reduced spacing between items */
 }
 
+.publications-list li a {
+    color: var(--accent-color);
+    word-break: break-all;
+}
+
+/* Make project links stand out */
+.section-content strong a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.section-content strong a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    /* Add more space between projects on mobile */
+    .section-content > p:first-of-type {
+        margin-top: 0.5rem;
+    }
+    
+    /* Add visual separation between projects on mobile */
+    .section-content > p:nth-of-type(3) {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--separator-color);
+    }
+    
+    /* Adjust text alignment for better mobile readability */
+    p {
+        text-align: left;
+    }
+    
+    /* Ensure URLs don't overflow on mobile */
+    .publications-list li {
+        overflow-wrap: break-word;
+    }
+}

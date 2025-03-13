@@ -1,0 +1,47 @@
+/**
+ * math-style.css
+ * Simplified styling for mathematical notations using MathJax (lil-log style)
+ */
+
+/* Styling for block-level math equations */
+.MathJax_Display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 1em 0 !important;
+    text-align: center;
+  }
+  
+  /* General MathJax styling */
+  .MathJax {
+    outline: 0;
+    font-size: 100% !important;
+  }
+  
+  /* Proper alignment for display math */
+  .math-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 1.2em 0;
+  }
+  
+  /* Styling for inline math equations */
+  .math-inline {
+    display: inline-block;
+    vertical-align: middle;
+  }
+  
+  /* MathJax font size for content */
+  .post-content .MathJax {
+    font-size: 105% !important;
+  }
+  
+  /* Responsive adjustments for math on smaller screens */
+  @media (max-width: 768px) {
+    .post-content .MathJax {
+      font-size: 100% !important;
+    }
+    
+    .math-display {
+      font-size: 90%;
+    }
+  }

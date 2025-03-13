@@ -1,20 +1,96 @@
 /* playground.css */
-.section {
-  display: grid;
-  grid-template-columns: 180px 1fr;  /* Left: section title; Right: section content */
-  column-gap: 1.5rem;
-  align-items: flex-start;
-  margin-bottom: 1.5rem;
-}
-
-.section-title {
-  font-weight: bold;
-  color: var(--accent-color);
-  font-size: 16px;
-  padding: 0;
-}
 
 /* Add a top padding to the board games content so its vertical position matches the home page */
 #board-games .section-content {
   padding-top: 0.5em;
+}
+
+/* Game grid and card styles */
+.game-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1200px; 
+  margin: 0 auto;
+  padding: 0 20px;
+  gap: 30px;
+}
+
+.game-card {
+  position: relative;
+  width: 215px;
+  margin: 20px 0;
+  flex: 0 0 calc(33.333% - 30px);
+}
+
+.game-card::before {
+  content: "";
+  display: block;
+  padding-top: calc((200 / 215) * 100%); /* Maintains original 200/215 aspect ratio */
+}
+
+.game-card > a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+}
+
+.game-card:hover > a {
+  transform: translateY(-5px);
+}
+
+.game-card img {
+  width: 100%;
+  height: 85%;
+  object-fit: cover;
+}
+
+.game-title {
+  height: 15%;
+  width: 100%;
+  font-size: 0.9em;
+  font-weight: bold;
+  padding: 6px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive design based on container width */
+@media (max-width: 1199px) {
+  .game-card {
+    flex: 0 0 calc(50% - 30px);
+  }
+}
+
+@media (max-width: 799px) {
+  .game-grid {
+    gap: 20px;
+  }
+  .game-card {
+    flex: 0 0 calc(100% - 20px);
+    margin: 15px 0;
+  }
+}
+
+/* Mobile responsive layout - this works with style.css media queries */
+@media (max-width: 768px) {
+  /* Games will stack in a single column on mobile */
+  #board-games .section-content {
+    padding-top: 1em;
+  }
 }

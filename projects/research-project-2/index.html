@@ -1,149 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Physics-Informed Deep Learning CT Image Restoration</title>
-
-  <!-- Preconnects for fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-  <!-- Fonts: Inter + Source Code Pro -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Inter:wght@400;700&display=swap"
-    rel="stylesheet"
-  />
-
-  <!-- Existing CSS -->
-  <link rel="stylesheet" href="../../style.css" />
-  <link rel="stylesheet" href="../article.css" />
+  <title>Physics-Informed Deep Learning CT Radiomics Standardization</title>
+  
+  <!-- Font imports -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400;1,700&family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet"/>
+  
+  <!-- CSS links -->
+  <link rel="stylesheet" href="../../style.css"/>
+  <link rel="stylesheet" href="../../navbar.css"/>
+  <link rel="stylesheet" href="../../projects/code-highlighting.css"/>
+  <link rel="stylesheet" href="../../projects/math-style.css"/>
+  <link rel="stylesheet" href="../../projects/markdown.css"/>
   <script src="../../script.js" defer></script>
-
-  <!-- MathJax Configuration (version 3) -->
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$','$$'], ['\\[','\\]']]
+  
+  <!-- MathJax Configuration -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+        processEscapes: true
+      },
+      "HTML-CSS": { 
+        fonts: ["TeX"],
+        scale: 100
       }
-    };
+    });
   </script>
-  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
-  <!-- Optional: Standardize math size to match text -->
-  <style>
-    /* Ensure MathJax fonts match surrounding text size */
-    .MathJax_Display,
-    .MathJax_Inline {
-      font-size: 1em !important;
-      line-height: 1.5;
-    }
-
-    /* Make figure/caption full-width */
-    figure.fullwidth-figure {
-      width: 100%;
-      margin: 1.5em 0; /* You can adjust vertical spacing */
-    }
-    figure.fullwidth-figure img {
-      display: block;      /* Removes inline gap below images */
-      width: 100%;         /* Fill container width */
-      height: auto;        /* Maintain aspect ratio */
-    }
-    figure.fullwidth-figure figcaption {
-      margin-top: 0.5em;   /* Space between img & caption */
-      font-size: 1em;      /* Match body text size */
-      font-style: normal;  /* Use normal text (not italic) */
-      color: #555;         /* Medium gray for the caption */
-      line-height: 1.4;    /* A bit tighter than normal text */
-      text-align: center;  /* Center the caption text */
-    }
-  </style>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </head>
 
 <body>
   <header>
-    <nav class="header-nav">
-      <ul>
-        <li><a href="../../">home</a></li>
-        <li><a href="../">projects</a></li>
-        <li><a href="../../playground/">playground</a></li>
-        <li><a href="../../cv/">cv</a></li>
-      </ul>
-    </nav>
+    <div class="header-container">
+      <nav class="header-nav">
+        <ul>
+          <li><a href="../../">home</a></li>
+          <li><a href="../">projects</a></li>
+          <li><a href="../../playground/">playground</a></li>
+          <li><a href="../../cv/">cv</a></li>
+        </ul>
+      </nav>
+    </div>
   </header>
 
-  <div class="project-container">
-    <h1>Physics-Informed Deep Learning CT Radiomics Standardization</h1>
-    <p class="meta-info">Date: February 3, 2025 | Author: Yijie Yuan</p>
+  <div class="post">
+    <header class="post-header">
+      <h1 class="post-title">Physics-Informed Deep Learning CT Radiomics Standardization</h1>
+      <p class="post-meta">February 3, 2025 &middot; Yijie Yuan</p>
+    </header>
 
-    <!-- GIF Section -->
-    <h2>Differentiable GLRLM Calculation</h2>
-    <figure class="fullwidth-figure">
-      <img src="Differentiable GLRLM.gif" alt="GLRLM Calculation Animation" />
-      <figcaption>
-        Figure 1. The differentiable GLRLM algorithm: (1) Decompose the image 
-        into gray-level masks; (2) Convolve each mask with [1,1] to detect run ends; 
-        (3) Remove the last element of each run to capture run lengths; and (4) Repeat 
-        until masks are empty and the final GLRLM is formed by removing redundancy (substracting neighboring columns).
-      </figcaption>
-    </figure>
+    <div class="post-content">
+      <!-- GIF Section -->
+      <h2>Differentiable GLRLM Calculation</h2>
+      <figure class="fullwidth-figure">
+        <img src="Differentiable GLRLM.gif" alt="GLRLM Calculation Animation" />
+        <figcaption>
+          Figure 1. The differentiable GLRLM algorithm: (1) Decompose the image 
+          into gray-level masks; (2) Convolve each mask with [1,1] to detect run ends; 
+          (3) Remove the last element of each run to capture run lengths; and (4) Repeat 
+          until masks are empty and the final GLRLM is formed by removing redundancy (substracting neighboring columns).
+        </figcaption>
+      </figure>
 
-    <!-- Differentiable GLRLM Explanation -->
-    <div class="article-section">
+      <!-- Differentiable GLRLM Explanation -->
       <h3>Method Overview</h3>
       <p>
         To compute the Gray-Level Run Length Matrix (GLRLM) in a differentiable manner,
-        we first decompose the grayscale image $\,\mu(x,y)\,$ into binary masks $\,B_{i}\,$
+        we first decompose the grayscale image $\mu(x,y)$ into binary masks $B_{i}$
         for each gray level using:
       </p>
-      $$ T_{i} \;=\; \frac{1}{1 + e^{-\alpha(\mu - g_{i})}}
-         \quad \text{where} \quad \alpha = 100. $$
+
+      $$T_{i} = \frac{1}{1 + e^{-\alpha(\mu - g_{i})}} \quad \text{where} \quad \alpha = 100.$$
 
       <p>
-        These masks $\,B_{i}\,$ smoothly approximate hard thresholding.
-        For each mask $\,B_{i}\,$ and a run length $\,l\,$ along direction $\,\theta\,$,
+        These masks $B_{i}$ smoothly approximate hard thresholding.
+        For each mask $B_{i}$ and a run length $l$ along direction $\theta$,
         we compute the cross-correlation inline as
-        $\,C_{i,l,\theta} = B_{i} \,\star\, \mathbf{1}_{l,\theta}\,$,
-        generating a response map that sums over $\,l\,$ consecutive pixels.
+        $C_{i,l,\theta} = B_{i} \star \mathbf{1}_{l,\theta}$,
+        generating a response map that sums over $l$ consecutive pixels.
       </p>
 
       <p>
         Next, to compute the cumulative run count of runs of length $\geq l$,
-        we apply another sigmoid (with $\,\beta = 10\,$) to threshold the cross-correlations:
+        we apply another sigmoid (with $\beta = 10$) to threshold the cross-correlations:
       </p>
-      $$
-      R\bigl(i,\ge l \mid \theta\bigr)
-      \;=\;
-      \sum_{x,y} \Biggl[\,
-        \frac{1}{1 + \exp\!\bigl(-\beta\,[\,C_{i,l-1,\theta} - (l-1) + 0.5\,]\bigr)}
-        \;-\;
-        \frac{1}{1 + \exp\!\bigl(-\beta\,[\,C_{i,l,\theta} - l + 0.5\,]\bigr)}
-      \Biggr].
-      $$
+
+      $$R(i,\geq l \mid \theta) = \sum_{x,y} \left[ \frac{1}{1 + \exp(-\beta[C_{i,l-1,\theta} - (l-1) + 0.5])} - \frac{1}{1 + \exp(-\beta[C_{i,l,\theta} - l + 0.5])} \right].$$
 
       <p>
-        Finally, the number of runs of exact length $\,l\,$ is obtained by subtracting cumulative counts:
+        Finally, the number of runs of exact length $l$ is obtained by subtracting cumulative counts:
       </p>
-      $$
-      R\bigl(i,l \mid \theta\bigr)
-      \;=\;
-      R\bigl(i,\ge l \mid \theta\bigr)
-      \;-\;
-      R\bigl(i,\ge (l+1) \mid \theta\bigr).
-      $$
+
+      $$R(i,l \mid \theta) = R(i,\geq l \mid \theta) - R(i,\geq (l+1) \mid \theta).$$
 
       <p>
         By making each step differentiable, this approach permits end-to-end training and
         backpropagation through the GLRLM feature extraction process.
       </p>
     </div>
-
-    <div class="project-divider"></div>
   </div>
 
   <footer>
-    &copy; 2025 Yijie Yuan.
+    <div class="footer-content">
+      <p>&copy; Yijie Yuan</p>
+    </div>
   </footer>
 </body>
 </html>

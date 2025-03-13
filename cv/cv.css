@@ -1,19 +1,52 @@
-/* 1) Import a digital-style font (optional) */
+/* Import the digital-style font */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
 
-/* 2) Style the LED display text */
+/* Style the LED display text */
 .led-display {
   display: inline-block;
   font-family: 'Orbitron', monospace; /* Fallback to monospace if Orbitron fails */
   font-size: 1rem;
-  color: #4aa553;                    /* Bright red digits */
-  background-color: #ffffff;            /* Black background like a digital clock */
+  color: #4aa553;                    /* Green digits */
+  background-color: #ffffff;         /* White background */
   padding: 0.2em 0.0em;
   border-radius: 0.2em;
+}
 
-  /* A subtle glowing effect */
-  /* text-shadow:
-    0 0 5px rgba(255, 0, 0, 0.8),
-    0 0 10px rgba(255, 0, 0, 0.6),
-    0 0 15px rgba(255, 0, 0, 0.4); */
+/* Additional CV page specific styles */
+#peer-reviewed-publications a,
+#conference-proceedings a,
+#presentations a {
+  color: var(--accent-color);
+  word-break: break-all;
+}
+
+#peer-reviewed-publications h3,
+#conference-proceedings h3,
+#ai-competitions h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--subtitle-color);
+  font-size: 1.1rem;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  /* Better URL wrapping on mobile */
+  #peer-reviewed-publications a,
+  #conference-proceedings a,
+  #presentations a {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+  
+  /* Add more space between sections on mobile */
+  .section {
+    margin-bottom: 2rem;
+  }
+  
+  /* Slightly larger LED display on mobile for better visibility */
+  .led-display {
+    font-size: 1.1rem;
+    padding: 0.3em 0.1em;
+  }
 }

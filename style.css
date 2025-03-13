@@ -24,56 +24,25 @@ body {
 }
 
 /* ====================================
- 2. Header Navigation
+ 2. Section Layout
 ==================================== */
-.header-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--separator-color);
-}
-
-.header-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  gap: 15px;
-}
-
-.header-nav li a {
-  font-size: 16px;
-  text-decoration: none;
-  color: var(--link-color);
-  font-weight: bold;
-}
-
-.last-updated {
-  font-size: 14px;
-  color: var(--subtitle-color);
-  margin-left: auto;
-}
-
-/* ====================================
- 3. Section Layout
-==================================== */
-/* Ensure section title aligns its first line with the content */
+/* Two column layout for desktop */
 .section {
   display: grid;
   grid-template-columns: 180px 1fr;
   column-gap: 1.5rem;
-  align-items: start; /* Aligns items to the top instead of centering */
+  align-items: start;
+  margin-bottom: 2rem;
 }
 
-/* Section title fix for multi-line alignment */
+/* Section title styles */
 .section-title {
   font-weight: bold;
   color: var(--accent-color);
   font-size: 16px;
   margin: 0;
   padding: 0;
-  display: block; /* Prevents flex from interfering */
+  display: block;
 }
 
 /* Ensure section content does not have extra top margin */
@@ -83,15 +52,32 @@ body {
 }
 
 .section-content p {
-  margin-top: 0; /* Removes any additional spacing */
+  margin-top: 0;
 }
 
 .section-content h3 {
-  margin-top: 0; /* Removes any additional spacing */
+  margin-top: 0;
+}
+
+/* Responsive layout for mobile devices */
+@media (max-width: 768px) {
+  .section {
+    display: block;
+    margin-bottom: 2rem;
+  }
+  
+  .section-title {
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  .section-content {
+    margin-top: 0.5rem;
+  }
 }
 
 /* ====================================
- 4. About Me (Image + Text)
+ 3. About Me (Image + Text)
 ==================================== */
 .about-me {
   position: relative;
@@ -107,8 +93,17 @@ body {
   box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
 }
 
+@media (max-width: 768px) {
+  .about-me img {
+    float: none;
+    display: block;
+    margin: 0 auto 15px auto;
+    max-width: 100%;
+  }
+}
+
 /* ====================================
- 5. Experience
+ 4. Experience
 ==================================== */
 .job-title {
   font-weight: bold;
@@ -120,7 +115,7 @@ body {
 }
 
 /* ====================================
- 6. Contact Section
+ 5. Contact Section
 ==================================== */
 .section.contact {
   background-color: #f8f9fa;             
@@ -136,6 +131,9 @@ body {
   font-weight: bold;
   display: block;
   margin-bottom: 5px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent-color);
 }
 
 .email-label {
@@ -150,7 +148,15 @@ body {
 
 .contact-info-row {
   display: flex;
-  gap: 40px; /* Space between the two email items */
+  gap: 40px;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .contact-info-row {
+    flex-direction: column;
+    gap: 15px;
+  }
 }
 
 .contact-note {
@@ -162,6 +168,7 @@ body {
 .contact-buttons {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -175,20 +182,21 @@ body {
   color: var(--accent-color);
   background: transparent;
   transition: all 0.3s ease;
+  margin-bottom: 5px;
 }
 .btn:hover {
   background: var(--accent-color);
   color: #ffffff;
 }
 
-/* NEW: Shrink the Instagram icon */
+/* Instagram icon */
 .instagram-icon {
   width: 32px;
   height: 32px;
 }
 
 /* ====================================
- 7. Divider & Footer
+ 6. Divider & Footer
 ==================================== */
 .divider {
   margin: 1.5rem 0;
@@ -203,13 +211,20 @@ footer {
   margin-top: 20px;
 }
 
+.last-updated {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--subtitle-color);
+  margin-left: 10px;
+}
+
 /* Keep vertical scrollbar */
 html {
   overflow-y: scroll;
 }
 
 /* ====================================
- 8. Links
+ 7. Links
 ==================================== */
 a {
   text-decoration: none;
@@ -227,28 +242,16 @@ a:hover {
 
 /* Email subsection spacing */
 .email-subsection {
-  margin-bottom: 1rem;  /* Adds space after the email section */
+  margin-bottom: 1rem;
 }
 
 /* Career subsection spacing */
 .career-subsection {
-  margin-top: 1rem;   /* Space before career section */
-  margin-bottom: 1rem;  /* Space after career section */
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 /* Social Media subsection spacing */
 .social-media-subsection {
-  margin-top: 1rem;   /* Space before social media section */
-}
-
-/* Adjust contact label spacing */
-.contact-label {
-  margin-top: 0.5rem;   /* Space above each label */
-  margin-bottom: 0.5rem;  /* Space below each label */
-  color: var(--accent-color);  /* Makes labels stand out more */
-}
-
-/* Adjust contact info row spacing */
-.contact-info-row {
-  margin-bottom: 0.5rem;  /* Space below email row */
+  margin-top: 1rem;
 }
