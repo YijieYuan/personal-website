@@ -7,8 +7,8 @@
 
 // Constants
 #define MAX_SHAPES 1000
-#define MAX_CANDIDATES 200
-#define MAX_MUTATIONS 20
+#define MAX_CANDIDATES 500
+#define MAX_MUTATIONS 200
 
 // Shape types
 typedef enum {
@@ -122,7 +122,7 @@ int random_int(int min, int max) {
 }
 
 float random_float() {
-    return (float)rand() / RAND_MAX;
+    return (float)rand() / ((float)RAND_MAX + 1.0f);
 }
 
 float clamp(float value, float min, float max) {
@@ -322,16 +322,14 @@ Shape create_random_shape(int width, int height, float alpha, State* state) {
 
 // Optimized point-in-triangle test
 int point_in_triangle(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3) {
-    // Barycentric coordinate method - optimized version
-    int area = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);
-    if (area == 0) return 0; // Degenerate triangle
-    
-    float s = (float)((y1 - y3) * (x - x3) + (x3 - x1) * (y - y3)) / area;
-    if (s < 0 || s > 1) return 0;
-    
-    float t = (float)((y3 - y2) * (x - x3) + (x2 - x3) * (y - y3)) / -area;
-    
-    return (t >= 0 && s + t <= 1);
+    // Compute cross product signs
+    int d1 = (x - x1) * (y2 - y1) - (x2 - x1) * (y - y1);
+    int d2 = (x - x2) * (y3 - y2) - (x3 - x2) * (y - y2);
+    int d3 = (x - x3) * (y1 - y3) - (x1 - x3) * (y - y3);
+
+    // Check if signs are all non-negative or all non-positive
+    return (d1 >= 0 && d2 >= 0 && d3 >= 0) || 
+           (d1 <= 0 && d2 <= 0 && d3 <= 0);
 }
 
 // Helper function to check if a point is inside an ellipse
@@ -686,11 +684,31 @@ float compute_difference_change_direct(Image* current, Image* target, Shape shap
 }
 
 State* init_state(Image* target, Color background, int use_triangles, int use_rectangles, int use_ellipses) {
+    // Compute average color of the target image
+    float r_sum = 0, g_sum = 0, b_sum = 0;
+    int total_pixels = target->width * target->height;
+    
+    for (int i = 0; i < total_pixels; i++) {
+        r_sum += target->data[i * 4];
+        g_sum += target->data[i * 4 + 1];
+        b_sum += target->data[i * 4 + 2];
+    }
+    
+    Color average_color = {
+        .r = (unsigned char)(r_sum / total_pixels),
+        .g = (unsigned char)(g_sum / total_pixels),
+        .b = (unsigned char)(b_sum / total_pixels),
+        .a = 255
+    };
+
     State* state = (State*)malloc(sizeof(State));
     state->target = target;
     state->current = create_image(target->width, target->height);
-    fill_image(state->current, background);
-    state->background = background;
+    
+    // Use computed average color instead of the passed background
+    fill_image(state->current, average_color);
+    state->background = average_color;
+    
     state->shapes = (Shape*)malloc(MAX_SHAPES * sizeof(Shape));
     state->shape_count = 0;
     state->distance = compute_distance(state->current, target);
@@ -753,11 +771,10 @@ void export_svg(State* state, const char* filename) {
                 break;
                 
             case RECTANGLE:
-                fprintf(file, "<polygon points=\"%d,%d %d,%d %d,%d %d,%d\" ", 
+                fprintf(file, "<rect x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\" ",
                         shape.data.rectangle.x1, shape.data.rectangle.y1,
-                        shape.data.rectangle.x2, shape.data.rectangle.y1,
-                        shape.data.rectangle.x2, shape.data.rectangle.y2,
-                        shape.data.rectangle.x1, shape.data.rectangle.y2);
+                        shape.data.rectangle.x2 - shape.data.rectangle.x1,
+                        shape.data.rectangle.y2 - shape.data.rectangle.y1);
                 break;
                 
             case ELLIPSE:

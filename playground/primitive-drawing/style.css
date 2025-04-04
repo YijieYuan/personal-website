@@ -1,554 +1,610 @@
-/**************************************************************
-  Scoped to .game-wrapper so global styling is preserved
-**************************************************************/
-.game-wrapper .canvas-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  justify-content: center;
-  margin-bottom: 2rem;
-  width: 100%;
-}
-
-/* Canvas "cards" with perfect square aspect ratio */
-.game-wrapper .canvas-wrapper {
-  flex: 1 1 calc(50% - 1.5rem);
-  max-width: 450px;
-  aspect-ratio: 1 / 1; /* Force square aspect ratio */
-  min-width: 250px;
-  min-height: 250px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background-color: #fafafa;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.3s ease;
-  overflow: hidden; /* Ensure content stays within the border */
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  cursor: pointer; /* Show pointer cursor to indicate clickable */
-}
-
-/* Result canvas wrapper special styling for progress border */
-.game-wrapper #result-wrapper {
-  border: 2px solid #e0e0e0;
-  position: relative;
-}
-
-/* Progress border that wraps around the result canvas */
-.game-wrapper .progress-border {
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  pointer-events: none;
-  z-index: 5;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.game-wrapper .progress-border::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0%; /* Initial width, will be updated via JS */
-  height: 100%;
-  background: linear-gradient(to right, #4a76a8, #7986cb);
-  transition: width 0.3s ease;
-  z-index: 6;
-  opacity: 0.7;
-  clip-path: polygon(
-    0 0, /* Top-left start */
-    calc(var(--progress) * 4) 0, /* Top edge */
-    calc(var(--progress) * 4 - 100%) 100%, /* Bottom edge */
-    0 100% /* Bottom-left corner */
-  );
-}
-
-/* When progress is high enough, show right edge */
-.game-wrapper .progress-border.right-visible::before {
-  clip-path: polygon(
-    0 0, /* Top-left */
-    100% 0, /* Top-right */
-    100% calc(var(--progress) * 4 - 300%), /* Right edge */
-    0 100% /* Bottom-left */
-  );
-}
-
-/* When progress is even higher, show bottom edge */
-.game-wrapper .progress-border.bottom-visible::before {
-  clip-path: polygon(
-    0 0, /* Top-left */
-    100% 0, /* Top-right */
-    100% 100%, /* Bottom-right */
-    calc(400% - var(--progress) * 4) 100% /* Bottom edge */
-  );
-}
-
-/* When progress is nearly complete, show left edge */
-.game-wrapper .progress-border.left-visible::before {
-  clip-path: polygon(
-    0 calc(var(--progress) * 4 - 300%), /* Left edge */
-    100% 0, /* Top-right */
-    100% 100%, /* Bottom-right */
-    0 100% /* Bottom-left */
-  );
-}
-
-/* Completed border animation */
-.game-wrapper .progress-border.completed::before {
-  background: linear-gradient(45deg, #43a047, #66bb6a, #81c784, #a5d6a7);
-  background-size: 400% 400%;
-  animation: gradientBorder 3s ease infinite;
-}
-
-@keyframes gradientBorder {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Slight "floating" on hover */
-.game-wrapper .canvas-wrapper:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-  border-color: #4a76a8;
-}
-
-/* Highlight border when dragging over */
-.game-wrapper .canvas-wrapper.dragover,
-.game-wrapper .upload-label.dragover {
-  border: 2px solid #4a76a8; /* accent color highlight */
-  background-color: #f0f8ff; /* subtle highlight color */
-}
-
-/* Placeholder text (when "empty" class is present) */
-.game-wrapper .canvas-wrapper.empty::before {
-  content: "Drop image here or click to upload";
-  color: #666;
-  font-style: italic;
-  text-align: center;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  font-size: 0.95rem;
-}
-
-/* Force the canvas to completely fill the wrapper */
-.game-wrapper .canvas-wrapper canvas {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Changed to cover to fill entire space */
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-/* Canvas labels */
-.game-wrapper .canvas-label {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  z-index: 10;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.game-wrapper .canvas-wrapper:hover .canvas-label {
-  opacity: 0.7;
-}
-
-/* Status overlay for result canvas */
-.game-wrapper .result-status {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  z-index: 10;
-  max-width: 80%;
-  text-align: right;
-}
-
-/**************************************************************
-  UPLOAD SECTION
-**************************************************************/
-.game-wrapper .upload-section {
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.upload-label {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 8px 12px;
-  background-color: #4a76a8;
-  color: #fff;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s;
-  flex-shrink: 0;
-  position: relative;
-  border: 2px solid transparent;
-}
-
-.upload-label svg {
-  width: 18px;
-  height: 18px;
-}
-
-.upload-label:hover {
-  background-color: #3a5f84;
-}
-
-.game-wrapper .upload-hint {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/**************************************************************
-  Redesigned controls section
-**************************************************************/
-.game-wrapper .controls-container {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  background-color: #f9f9f9;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-  transition: opacity 0.3s ease;
-}
-
-/* Visual indication when processing */
-.game-wrapper .controls-container.processing {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.game-wrapper .controls-section {
-  margin-bottom: 1.5rem;
-}
-
-.game-wrapper .controls-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: #333;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-.game-wrapper .controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem 2rem;
-  margin-bottom: 1.5rem;
-  align-items: flex-start;
-}
-
-.game-wrapper .control-group {
-  display: flex;
-  flex-direction: column;
-  min-width: 120px;
-  flex: 1 1 calc(33.333% - 2rem);
-}
-
-.game-wrapper .control-group label {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #555;
-  font-size: 0.9rem;
-}
-
-.game-wrapper .control-group select,
-.game-wrapper .control-group input {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.95rem;
-}
-
-.game-wrapper .shape-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.game-wrapper .shape-options label {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin: 0;
-  font-weight: normal;
-}
-
-.game-wrapper .action-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.game-wrapper .action-controls button {
-  padding: 10px 18px;
-  background-color: #4a76a8;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  flex: 1;
-  min-width: 120px;
-}
-
-.game-wrapper .action-controls button:hover:not(:disabled) {
-  background-color: #3a5f84;
-}
-
-.game-wrapper .action-controls button:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.game-wrapper .action-controls button:disabled {
-  background-color: #b0b0b0;
-  cursor: not-allowed;
-}
-
-.game-wrapper .action-controls button#start-button {
-  background-color: #2e7d32;
-}
-
-.game-wrapper .action-controls button#start-button:hover:not(:disabled) {
-  background-color: #1b5e20;
-}
-
-/**************************************************************
-  SVG Output styling - Improved version
-**************************************************************/
-.game-wrapper .svg-output-section {
-  background-color: #f7f7f7;
-  border: 1px solid #e1e4e8;
-  border-radius: 6px;
-  margin-bottom: 2rem;
-  overflow: hidden;
-}
-
-.game-wrapper .svg-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #f1f2f3;
-  border-bottom: 1px solid #e1e4e8;
-  padding: 12px 16px;
-}
-
-.game-wrapper .svg-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #24292e;
-  margin: 0;
-}
-
-.game-wrapper .svg-tabs-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background-color: #f7f7f7;
-  padding: 0 16px;
-  border-bottom: 1px solid #e1e4e8;
-}
-
-.game-wrapper .svg-tabs {
-  display: flex;
-  align-items: center;
-  margin: 0;
-}
-
-.game-wrapper .svg-tab {
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  color: #57606a;
-  background-color: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.game-wrapper .svg-tab:hover {
-  color: #0969da;
-}
-
-.game-wrapper .svg-tab.active {
-  color: #0969da;
-  font-weight: 500;
-  border-bottom-color: #0969da;
-}
-
-.game-wrapper .svg-actions {
-  display: flex;
-  align-items: center;
-}
-
-.game-wrapper .svg-copy-btn {
-  background-color: #f6f8fa;
-  color: #24292e;
-  border: 1px solid rgba(27, 31, 36, 0.15);
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.game-wrapper .svg-copy-btn:hover {
-  background-color: #f3f4f6;
-}
-
-.game-wrapper .svg-copy-btn:active {
-  background-color: #ebecf0;
-}
-
-.game-wrapper .svg-copy-btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* Copy success indicator */
-.game-wrapper .copy-success {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.game-wrapper .copy-success.visible {
-  opacity: 1;
-  animation: fadeInOut 1.5s ease forwards;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.game-wrapper .svg-content {
-  display: none;
-  position: relative;
-}
-
-.game-wrapper .svg-content.active {
-  display: block;
-}
-
-.game-wrapper #svg-output,
-.game-wrapper #svg-output-compact {
-  background-color: #ffffff;
-  margin: 0;
-  padding: 16px;
-  font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  overflow-y: auto;
-  max-height: 200px;
-  color: #24292e;
-  border: none;
-}
-
-.game-wrapper #svg-output-compact {
-  white-space: pre;
-  overflow-x: auto;
-}
-
-/* Remove the traditional progress bar */
-.game-wrapper .optimization-status {
-  margin-bottom: 1rem;
-}
-
-.game-wrapper #progress {
-  display: none;
-}
-
-/* Responsive: stack canvases on narrower screens */
-@media (max-width: 800px) {
-  .game-wrapper .canvas-container {
+/* Base styles */
+* {
+    /* box-sizing: border-box; */
+    /* margin: 0; */
+    /* padding: 0; */
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    color: #333;
+    background-color: #f5f7fa;
+    padding: 20px;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  /* Canvas container */
+  .canvas-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .canvas-wrapper {
+    flex: 1;
+    aspect-ratio: 1 / 1;
+    min-width: 200px;
+    min-height: 200px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fafafa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    cursor: pointer;
+  }
+  
+  .canvas-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    border-color: #4a76a8;
+  }
+  
+  .canvas-wrapper.empty::before {
+    content: "Drop image here or click to upload";
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    font-size: 0.95rem;
+  }
+  
+  .canvas-wrapper canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  
+  .canvas-label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .canvas-wrapper:hover .canvas-label {
+    opacity: 0.7;
+  }
+  
+  .progress-border {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    pointer-events: none;
+    z-index: 5;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .progress-border::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(to right, #4a76a8, #7986cb);
+    transition: width 0.3s ease;
+    z-index: 6;
+    opacity: 0.7;
+    clip-path: polygon(
+      0 0, calc(var(--progress) * 4) 0, 
+      calc(var(--progress) * 4 - 100%) 100%, 0 100%
+    );
+  }
+  
+  .progress-border.right-visible::before {
+    clip-path: polygon(
+      0 0, 100% 0, 100% calc(var(--progress) * 4 - 300%), 0 100%
+    );
+  }
+  
+  .progress-border.bottom-visible::before {
+    clip-path: polygon(
+      0 0, 100% 0, 100% 100%, calc(400% - var(--progress) * 4) 100%
+    );
+  }
+  
+  .progress-border.left-visible::before {
+    clip-path: polygon(
+      0 calc(var(--progress) * 4 - 300%), 100% 0, 100% 100%, 0 100%
+    );
+  }
+  
+  .progress-border.completed::before {
+    background: linear-gradient(45deg, #43a047, #66bb6a, #81c784, #a5d6a7);
+    background-size: 400% 400%;
+    animation: gradientBorder 3s ease infinite;
+  }
+  
+  @keyframes gradientBorder {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .result-status {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    z-index: 10;
+    max-width: 80%;
+    text-align: right;
+  }
+  
+  /* Card styling */
+  .card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .card-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  /* Upload section - more compact */
+  .upload-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  
+  .upload-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #4a76a8;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .upload-btn:hover {
+    background-color: #3a5f84;
+  }
+  
+  .upload-hint {
+    color: #666;
+    font-size: 13px;
+  }
+  
+  /* Form grid - more compact */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 16px;
+    margin-bottom: 14px;
+  }
+  
+  /* Form groups and controls - more compact */
+  .form-group {
+    display: flex;
     flex-direction: column;
+    gap: 4px;
+  }
+  
+  .form-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .input-wrapper {
+    display: flex;
+    align-items: center;
+    height: 32px;
+  }
+  
+  .form-control {
+    width: 100%;
+    height: 32px;
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-control:hover {
+    border-color: #b3c0d1;
+  }
+  
+  .form-control:focus {
+    outline: none;
+    border-color: #4a76a8;
+    box-shadow: 0 0 0 2px rgba(74, 118, 168, 0.1);
+  }
+  
+  /* Slider styles - more compact */
+  .slider-wrapper {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .slider-container {
+    flex: 1;
+    position: relative;
+    height: 32px;
+    display: flex;
     align-items: center;
   }
   
-  .game-wrapper .canvas-wrapper {
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin-bottom: 1rem;
+  .form-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: #e6e9ee;
+    outline: none;
   }
   
-  .game-wrapper .control-group {
-    flex: 1 1 100%;
+  .form-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4a76a8;
+    border: 2px solid white;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
   
-  .game-wrapper .action-controls button {
-    flex: 1 1 100%;
-  }
-}
-
-/* For very small screens */
-@media (max-width: 480px) {
-  .game-wrapper .controls {
-    gap: 1rem;
-  }
-  
-  .game-wrapper .control-group {
-    min-width: 100%;
+  .form-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #4a76a8;
+    border: 2px solid white;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
   
-  .game-wrapper .upload-section {
-    flex-direction: column;
-    align-items: flex-start;
+  .number-input {
+    width: 60px;
+    padding: 4px;
+    text-align: center;
+    font-size: 13px;
   }
   
-  .game-wrapper .svg-tabs-container {
-    flex-direction: column;
+  /* Shape options - more compact */
+  .shape-options {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .shape-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    background-color: white;
+    transition: all 0.2s;
+  }
+  
+  .shape-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .shape-option svg {
+    width: 18px;
+    height: 18px;
+    stroke: #666;
+    stroke-width: 1.5;
+    fill: none;
+    transition: all 0.2s;
+  }
+  
+  .shape-option:hover {
+    border-color: #4a76a8;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .shape-option.active {
+    background-color: #f0f6ff;
+    border-color: #4a76a8;
+  }
+  
+  .shape-option.active svg {
+    stroke: #4a76a8;
+    fill: rgba(74, 118, 168, 0.1);
+  }
+  
+  /* Button group - more compact */
+  .button-group {
+    display: flex;
     gap: 10px;
-    padding: 10px 16px;
   }
   
-  .game-wrapper .svg-actions {
-    align-self: flex-end;
+  .btn {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    flex: 1;
+    transition: all 0.2s;
   }
-}
+  
+  .btn.primary {
+    background-color: #2e7d32;
+    color: white;
+  }
+  
+  .btn.primary:hover {
+    background-color: #1b5e20;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn.secondary {
+    background-color: #e0e0e0;
+    color: #666;
+  }
+  
+  .btn.secondary:hover:not(:disabled) {
+    background-color: #d0d0d0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  /* SVG Output */
+  .svg-output-section {
+    overflow: hidden;
+  }
+  
+  .svg-header {
+    margin-bottom: 0;
+  }
+  
+  .svg-tabs-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+  }
+  
+  .svg-tabs {
+    display: flex;
+    align-items: center;
+  }
+  
+  .svg-tab {
+    padding: 8px 12px;
+    margin-right: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  
+  .svg-tab:hover {
+    color: #4a76a8;
+  }
+  
+  .svg-tab.active {
+    color: #4a76a8;
+    border-bottom-color: #4a76a8;
+    font-weight: 500;
+  }
+  
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .copy-btn:hover {
+    background-color: #eee;
+    border-color: #ccc;
+  }
+  
+  .svg-content {
+    display: none;
+    position: relative;
+  }
+  
+  .svg-content.active {
+    display: block;
+  }
+  
+  #svg-output,
+  #svg-output-compact {
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    max-height: 150px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    color: #333;
+  }
+  
+  .copy-success {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  
+  .copy-success.visible {
+    opacity: 1;
+    animation: fadeOut 1.5s ease forwards;
+  }
+  
+  @keyframes fadeOut {
+    0%, 50% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .canvas-container {
+        display: grid;  /* Use grid instead of flex for better control */
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .canvas-wrapper {
+        aspect-ratio: 1 / 1;  /* Explicitly set square aspect ratio for mobile */
+        width: 100%;  /* Full width of container */
+        max-height: none;  /* Remove any max-height restrictions */
+    }
+    .canvas-container {
+      flex-direction: column;
+    }
+    
+    .form-grid {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    
+    .button-group {
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      flex: 1 0 calc(50% - 5px);
+    }
+    
+    .upload-section {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .upload-btn {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    body {
+      padding: 10px;
+    }
+    
+    .card {
+      padding: 12px;
+    }
+    
+    .button-group {
+      flex-direction: column;
+    }
+    
+    .btn {
+      flex: 1 0 100%;
+    }
+    
+    .slider-wrapper {
+      flex-direction: column;
+      gap: 4px;
+      height: auto;
+    }
+    
+    .input-wrapper {
+      height: auto;
+    }
+    
+    .number-input {
+      width: 100%;
+    }
+    
+    .svg-tabs-container {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+  }

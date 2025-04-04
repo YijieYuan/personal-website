@@ -72,6 +72,9 @@
 
 /* Responsive design based on container width */
 @media (max-width: 1199px) {
+  .game-grid {
+    justify-content: flex-start;
+  }
   .game-card {
     flex: 0 0 calc(50% - 30px);
   }

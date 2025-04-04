@@ -8,20 +8,23 @@ const startButton = document.getElementById('start-button');
 const downloadSvgButton = document.getElementById('download-svg');
 const downloadPngButton = document.getElementById('download-png');
 const progressBorder = document.querySelector('.progress-border');
-const statusDiv = document.getElementById('status');
 const resultStatusDiv = document.getElementById('result-status');
 const svgOutput = document.getElementById('svg-output');
 const svgOutputCompact = document.getElementById('svg-output-compact');
+const copySuccessDiv = document.getElementById('copy-success');
+const copySuccessCompactDiv = document.getElementById('copy-success-compact');
 const inputSizeSelect = document.getElementById('input-size');
 const outputSizeSelect = document.getElementById('output-size');
 const copySvgBtn = document.getElementById('copy-svg-btn');
 const useTrianglesCheckbox = document.getElementById('use-triangles');
 const useRectanglesCheckbox = document.getElementById('use-rectangles');
 const useEllipsesCheckbox = document.getElementById('use-ellipses');
-const controlElements = document.querySelectorAll('.controls select, .controls input, .controls button, .action-controls button');
 const originalWrapper = document.getElementById('original-wrapper');
 const resultWrapper = document.getElementById('result-wrapper');
 const uploadLabel = document.getElementById('upload-label');
+
+// Select all control elements
+const controlElements = document.querySelectorAll('.form-grid select, .form-grid input, .form-group input, .button-group button, .upload-btn');
 
 // Variables
 let sourceImage = null;
@@ -33,845 +36,1012 @@ let outputWidth = 256;
 let outputHeight = 256;
 let svgString = '';
 let svgCompactString = '';
-let currentSvgSize = 0;
-let currentPngSize = 0;
 let isRunning = false;
 let currentStep = 0;
 let totalSteps = 0;
-let startTime = 0; // Track when optimization started
+let startTime = 0;
+let copyInProgress = false;
+let rawSvgData = null; // Store raw SVG data for debugging
 
-// Initialize canvases
-function updateCanvasSizes() {
-    processingWidth = parseInt(inputSizeSelect.value, 10);
-    processingHeight = processingWidth; // Keep processing square
-    
-    outputWidth = parseInt(outputSizeSelect.value, 10);
-    outputHeight = outputWidth; // Keep output square
-    
-    // Update canvas sizes for processing
-    originalCanvas.width = processingWidth;
-    originalCanvas.height = processingHeight;
-    resultCanvas.width = processingWidth;
-    resultCanvas.height = processingHeight;
-}
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initialize);
+window.addEventListener('load', initialize);
 
-// Resize canvas to fill wrapper while maintaining aspect ratio
-function resizeCanvasToFillWrapper(canvas) {
-    const wrapper = canvas.parentElement;
-    
-    // Set display dimensions (CSS) to match wrapper exactly
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-}
-
-// Make sure canvas wrappers maintain a square aspect ratio
-function enforceSquareWrappers() {
-    const wrappers = document.querySelectorAll('.canvas-wrapper');
-    
-    wrappers.forEach(wrapper => {
-        // Ensure the wrapper has a minimum size (prevent disappearing)
-        wrapper.style.minWidth = '250px';
-        wrapper.style.minHeight = '250px';
+// Initialize application
+function initialize() {
+  updateCanvasSizes();
+  enforceSquareWrappers();
+  resetButtons();
+  updateProgressBorder(0);
+  setupCanvasDragAndDrop(originalWrapper);
+  setupCanvasDragAndDrop(resultWrapper);
+  setupUploadButtonDragAndDrop(uploadLabel);
+  setupShapeTypeToggles();
+  setupSliders();
+  setupTabs();
+  setTimeout(loadDefaultImage, 500);
+  
+  // Observe canvas resize
+  const resizeObserver = new ResizeObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.target.classList.contains('canvas-wrapper')) {
+        const canvas = entry.target.querySelector('canvas');
+        if (canvas) resizeCanvasToFillWrapper(canvas);
+      }
     });
+  });
+  
+  document.querySelectorAll('.canvas-wrapper').forEach(wrapper => {
+    resizeObserver.observe(wrapper);
+  });
 }
 
-// Update the progress border display
+// Transform SVG shapes - convert polygons to rectangles and fix triangles
+function transformSvgShapes(svgString) {
+  if (!svgString) return '';
+  
+  try {
+    // Create a DOM parser to properly handle the SVG
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+    
+    // Check for parsing errors
+    const parserError = svgDoc.querySelector('parsererror');
+    if (parserError) {
+      console.error("SVG parsing error:", parserError.textContent);
+      return svgString; // Return original if parsing fails
+    }
+    
+    // Process all polygon elements
+    svgDoc.querySelectorAll('polygon').forEach(polygon => {
+      const points = polygon.getAttribute('points');
+      if (!points) return;
+      
+      // Split points into an array of coordinates
+      const coords = points.trim().split(/\s+|,/).map(parseFloat);
+      
+      // Check if this is a rectangle (4 points forming a rectangle)
+      if (coords.length === 8) {
+        // Extract the points
+        const x1 = coords[0];
+        const y1 = coords[1];
+        const x2 = coords[2];
+        const y2 = coords[3];
+        const x3 = coords[4];
+        const y3 = coords[5];
+        const x4 = coords[6];
+        const y4 = coords[7];
+        
+        // Check if these points form a rectangle (parallel sides)
+        // This is a simple check - we're looking for points forming a rectangle
+        if ((Math.abs(y1 - y2) < 0.001 && Math.abs(y3 - y4) < 0.001 && 
+             Math.abs(x1 - x4) < 0.001 && Math.abs(x2 - x3) < 0.001)) {
+          
+          // Create a new rect element
+          const rect = svgDoc.createElementNS("http://www.w3.org/2000/svg", "rect");
+          
+          // Set attributes
+          rect.setAttribute("x", Math.min(x1, x2, x3, x4));
+          rect.setAttribute("y", Math.min(y1, y2, y3, y4));
+          rect.setAttribute("width", Math.abs(x2 - x1));
+          rect.setAttribute("height", Math.abs(y3 - y2));
+          rect.setAttribute("fill", polygon.getAttribute("fill"));
+          
+          // Replace the polygon with the rect
+          polygon.parentNode.replaceChild(rect, polygon);
+        }
+      }
+      // If it's a triangle (3 points), ensure its format is correct
+      else if (coords.length === 6) {
+        // Make sure the points are properly formatted with commas
+        const formattedPoints = 
+          `${coords[0]},${coords[1]} ${coords[2]},${coords[3]} ${coords[4]},${coords[5]}`;
+        polygon.setAttribute('points', formattedPoints);
+      }
+    });
+    
+    // Set dimensions
+    const svgRoot = svgDoc.documentElement;
+    svgRoot.setAttribute('width', outputWidth);
+    svgRoot.setAttribute('height', outputHeight);
+    svgRoot.setAttribute('viewBox', `0 0 ${processingWidth} ${processingHeight}`);
+    svgRoot.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    
+    // Serialize back to string
+    const serializer = new XMLSerializer();
+    return serializer.serializeToString(svgDoc);
+  } catch (error) {
+    console.error("Error transforming SVG:", error);
+    return svgString; // Return original on error
+  }
+}
+
+// Setup tabs
+function setupTabs() {
+  document.querySelectorAll('.svg-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.svg-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.svg-content').forEach(c => c.classList.remove('active'));
+      
+      tab.classList.add('active');
+      
+      const tabId = tab.getAttribute('data-tab');
+      document.getElementById(tabId + '-tab').classList.add('active');
+      
+      updateCopyButton();
+    });
+  });
+  
+  copySvgBtn.addEventListener('click', copyActiveSvg);
+}
+
+// Set up shape type toggle behavior
+function setupShapeTypeToggles() {
+  const shapeCheckboxes = [useTrianglesCheckbox, useRectanglesCheckbox, useEllipsesCheckbox];
+  const labels = [
+    document.getElementById('triangles-label'),
+    document.getElementById('rectangles-label'),
+    document.getElementById('ellipses-label')
+  ];
+
+  // Add event listeners to checkboxes
+  shapeCheckboxes.forEach((checkbox, index) => {
+    checkbox.addEventListener('change', function(e) {
+      // Update active class
+      labels[index].classList.toggle('active', this.checked);
+      
+      // Check if at least one shape type is selected
+      const anySelected = shapeCheckboxes.some(cb => cb.checked);
+      if (!anySelected) {
+        // If none selected, re-enable the current one
+        this.checked = true;
+        labels[index].classList.add('active');
+      }
+    });
+  });
+
+  // Add click handlers for labels
+  labels.forEach((label, index) => {
+    label.addEventListener('click', function(e) {
+      // Only toggle if click wasn't directly on the checkbox
+      if (e.target.tagName !== 'INPUT') {
+        const checkbox = shapeCheckboxes[index];
+        checkbox.checked = !checkbox.checked;
+        
+        // Toggle active class
+        label.classList.toggle('active', checkbox.checked);
+        
+        // Ensure at least one is selected
+        const anySelected = shapeCheckboxes.some(cb => cb.checked);
+        if (!anySelected) {
+          checkbox.checked = true;
+          label.classList.add('active');
+        }
+      }
+    });
+  });
+}
+
+// Setup sliders
+function setupSliders() {
+  setupSlider('shapes-slider', 'num-shapes');
+  setupSlider('candidates-slider', 'shape-candidates');
+  setupSlider('mutations-slider', 'num-mutations');
+  
+  // Set default values
+  document.getElementById('num-shapes').value = 500;
+  document.getElementById('shapes-slider').value = 500;
+  document.getElementById('shape-candidates').value = 350;
+  document.getElementById('candidates-slider').value = 350;
+  document.getElementById('num-mutations').value = 50;
+  document.getElementById('mutations-slider').value = 50;
+  
+  // Set default canvas size
+  inputSizeSelect.value = "256";
+  outputSizeSelect.value = "256";
+}
+
+// Helper for slider setup
+function setupSlider(sliderId, inputId) {
+  const slider = document.getElementById(sliderId);
+  const input = document.getElementById(inputId);
+  
+  if (!slider || !input) return;
+  
+  // Update input when slider changes
+  slider.addEventListener('input', function() {
+    input.value = this.value;
+  });
+  
+  // Update slider when input changes
+  input.addEventListener('change', function() {
+    let value = parseInt(this.value);
+    const min = parseInt(slider.min);
+    const max = parseInt(slider.max);
+    
+    if (isNaN(value)) value = slider.value;
+    if (value < min) value = min;
+    if (value > max) value = max;
+    
+    this.value = value;
+    slider.value = value;
+  });
+}
+
+// Reset button states
+function resetButtons() {
+  downloadSvgButton.disabled = true;
+  downloadPngButton.disabled = true;
+}
+
+// Update canvas sizes
+function updateCanvasSizes() {
+  processingWidth = parseInt(inputSizeSelect.value, 10);
+  processingHeight = processingWidth;
+  
+  outputWidth = parseInt(outputSizeSelect.value, 10);
+  outputHeight = outputWidth;
+  
+  originalCanvas.width = processingWidth;
+  originalCanvas.height = processingHeight;
+  resultCanvas.width = processingWidth;
+  resultCanvas.height = processingHeight;
+}
+
+// Enforce square wrappers
+function enforceSquareWrappers() {
+  document.querySelectorAll('.canvas-wrapper').forEach(wrapper => {
+    wrapper.style.minWidth = '250px';
+    wrapper.style.minHeight = '250px';
+  });
+}
+
+// Resize canvas to fill wrapper
+function resizeCanvasToFillWrapper(canvas) {
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+}
+
+// Setup canvas drag and drop
+function setupCanvasDragAndDrop(target) {
+  target.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    target.classList.add('dragover');
+  });
+  
+  target.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    target.classList.remove('dragover');
+  });
+  
+  target.addEventListener('drop', handleDroppedFile);
+  
+  if (target === originalWrapper) {
+    target.addEventListener('click', triggerFileUpload);
+  }
+}
+
+// Setup upload button drag and drop
+function setupUploadButtonDragAndDrop(target) {
+  target.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    target.classList.add('dragover');
+  });
+  
+  target.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    target.classList.remove('dragover');
+  });
+  
+  target.addEventListener('drop', handleDroppedFile);
+}
+
+// Handle dropped file
+function handleDroppedFile(e) {
+  e.preventDefault();
+  
+  document.querySelectorAll('.dragover').forEach(el => {
+    el.classList.remove('dragover');
+  });
+  
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+    const file = e.dataTransfer.files[0];
+    const input = document.getElementById('image-upload');
+    
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    input.files = dataTransfer.files;
+    
+    const event = new Event('change', { bubbles: true });
+    input.dispatchEvent(event);
+  }
+}
+
+// Trigger file upload dialog
+function triggerFileUpload() {
+  if (!isRunning) {
+    document.getElementById('image-upload').click();
+  }
+}
+
+// Load default image
+function loadDefaultImage() {
+  if (!sourceImage) {
+    sourceImage = new Image();
+    sourceImage.crossOrigin = "Anonymous";
+    
+    sourceImage.onload = () => {
+      updateCanvasSizes();
+      drawOriginalImage();
+      startButton.disabled = false;
+      updateProgressBorder(0);
+      resultStatusDiv.textContent = '';
+    };
+    
+    sourceImage.onerror = (err) => {
+      console.error("Error loading default image:", err);
+      resultStatusDiv.textContent = 'Error loading default image';
+    };
+    
+    sourceImage.src = './example-dolphin-input-cropped.jpg';
+  }
+}
+
+// Draw original image
+function drawOriginalImage() {
+  if (!sourceImage) return;
+  
+  originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+  resultCtx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
+  
+  try {
+    // Calculate source dimensions for a square crop from center
+    let sourceSize, sourceX, sourceY;
+    if (sourceImage.width > sourceImage.height) {
+      sourceSize = sourceImage.height;
+      sourceX = (sourceImage.width - sourceSize) / 2;
+      sourceY = 0;
+    } else {
+      sourceSize = sourceImage.width;
+      sourceX = 0;
+      sourceY = (sourceImage.height - sourceSize) / 2;
+    }
+    
+    // Draw the cropped and resized image on the original canvas
+    originalCtx.drawImage(
+      sourceImage,
+      sourceX, sourceY, sourceSize, sourceSize,
+      0, 0, processingWidth, processingHeight
+    );
+    
+    // Calculate average color for the result canvas
+    const imageData = originalCtx.getImageData(0, 0, processingWidth, processingHeight);
+    const data = imageData.data;
+    let r = 0, g = 0, b = 0;
+    const pixelCount = data.length / 4;
+    
+    for (let i = 0; i < data.length; i += 4) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+    }
+    
+    r = Math.round(r / pixelCount);
+    g = Math.round(g / pixelCount);
+    b = Math.round(b / pixelCount);
+    
+    // Fill the result canvas with the average color
+    resultCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+    resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+    
+    originalWrapper.classList.remove('empty');
+    resultWrapper.classList.remove('empty');
+    
+    resizeCanvasToFillWrapper(originalCanvas);
+    resizeCanvasToFillWrapper(resultCanvas);
+  } catch (error) {
+    console.error("Error drawing image:", error);
+    // Simple fallback if there's an error
+    try {
+      originalCtx.drawImage(sourceImage, 0, 0, processingWidth, processingHeight);
+      resultCtx.fillStyle = '#cccccc';
+      resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
+      
+      originalWrapper.classList.remove('empty');
+      resultWrapper.classList.remove('empty');
+    } catch (fallbackError) {
+      console.error("Fallback drawing also failed:", fallbackError);
+    }
+  }
+}
+
+// Update the progress border
 function updateProgressBorder(progress) {
-    // Set the progress as a CSS variable
-    progressBorder.style.setProperty('--progress', progress);
-    
-    // Calculate which edges should be visible based on progress
-    if (progress <= 25) {
-        // Top edge only (0-25%)
-        progressBorder.className = 'progress-border';
-    } else if (progress <= 50) {
-        // Top edge + right edge (25-50%)
-        progressBorder.className = 'progress-border right-visible';
-    } else if (progress <= 75) {
-        // Top, right, and bottom edges (50-75%)
-        progressBorder.className = 'progress-border right-visible bottom-visible';
-    } else if (progress < 100) {
-        // All edges (75-100%)
-        progressBorder.className = 'progress-border right-visible bottom-visible left-visible';
-    } else {
-        // Completed animation
-        progressBorder.className = 'progress-border completed';
-    }
+  progressBorder.style.setProperty('--progress', progress);
+  
+  // Update classes based on progress
+  if (progress <= 25) {
+    progressBorder.className = 'progress-border';
+  } else if (progress <= 50) {
+    progressBorder.className = 'progress-border right-visible';
+  } else if (progress <= 75) {
+    progressBorder.className = 'progress-border right-visible bottom-visible';
+  } else if (progress < 100) {
+    progressBorder.className = 'progress-border right-visible bottom-visible left-visible';
+  } else {
+    progressBorder.className = 'progress-border completed';
+  }
 }
 
-// Helper function to format file size adaptively (bytes to KB, MB, GB)
+// Format file size helper
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 KB';
-    
-    if (bytes < 1024) {
-        return bytes + ' B';
-    } else if (bytes < 1024 * 1024) {
-        return (bytes / 1024).toFixed(1) + ' KB';
-    } else if (bytes < 1024 * 1024 * 1024) {
-        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-    } else {
-        return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
-    }
+  if (bytes === 0) return '0 KB';
+  
+  if (bytes < 1024) {
+    return bytes + ' B';
+  } else if (bytes < 1024 * 1024) {
+    return (bytes / 1024).toFixed(1) + ' KB';
+  } else if (bytes < 1024 * 1024 * 1024) {
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  } else {
+    return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+  }
 }
 
-// Create a compact version of SVG by removing extra whitespace
+// Create a compact version of SVG - preserve exact shape data
 function createCompactSVG(svgString) {
-    if (!svgString) return '';
+  if (!svgString) return '';
+  
+  // Try to use the transformer to create a cleaner SVG
+  try {
+    // Create a DOM parser to properly handle the SVG
+    const parser = new DOMParser();
+    const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
     
-    // Remove newlines and unnecessary spaces
-    let compact = svgString
-        .replace(/>\s+</g, '><') // Remove whitespace between tags
-        .replace(/\s+/g, ' ')    // Replace multiple spaces with single space
-        .replace(/\s+>/g, '>')   // Remove spaces before closing brackets
-        .replace(/<\s+/g, '<')   // Remove spaces after opening brackets
-        .replace(/\s+=/g, '=')   // Remove spaces before equals
-        .replace(/=\s+/g, '=')   // Remove spaces after equals
-        .trim();                 // Trim any leading/trailing whitespace
-    
-    return compact;
-}
-
-// Update file size information on buttons
-function updateFileSizeInfo() {
-    // Force recalculation of the SVG strings if needed
-    if (!svgCompactString && svgString) {
-        svgCompactString = createCompactSVG(svgString);
+    // Check for parsing errors
+    const parserError = svgDoc.querySelector('parsererror');
+    if (parserError) {
+      console.error("SVG parsing error in compaction:", parserError.textContent);
+      return basicCompactSvg(svgString);
     }
     
-    // Calculate SVG sizes (making sure to get fresh calculations each time)
+    // Remove whitespace from text nodes
+    const removeWhitespace = (node) => {
+      if (node.nodeType === 3) { // Text node
+        node.textContent = node.textContent.trim();
+      } else if (node.nodeType === 1) { // Element node
+        Array.from(node.childNodes).forEach(removeWhitespace);
+      }
+    };
+    
+    removeWhitespace(svgDoc.documentElement);
+    
+    // Serialize back to string
+    const serializer = new XMLSerializer();
+    let output = serializer.serializeToString(svgDoc);
+    
+    // Basic string cleanup
+    output = output.replace(/>\s+</g, '><').trim();
+    
+    return output;
+  } catch (error) {
+    console.error("Error in SVG compaction:", error);
+    return basicCompactSvg(svgString);
+  }
+}
+
+// Basic string-based SVG compaction as fallback
+function basicCompactSvg(svgString) {
+  return svgString
+    .replace(/>\s+</g, '><')   // Remove whitespace between tags
+    .replace(/\s+>/g, '>')     // Remove spaces before closing brackets
+    .replace(/<\s+/g, '<')     // Remove spaces after opening brackets
+    .trim();                   // Trim leading/trailing whitespace
+}
+
+// Update the result status
+function updateResultStatus(currentStep, totalSteps, similarity) {
+  const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
+  const statusText = `Step ${currentStep}/${totalSteps} (${similarity.toFixed(1)}%) - ${elapsedTime}s`;
+  resultStatusDiv.textContent = statusText;
+  resultStatusDiv.style.display = 'block';
+}
+
+// Update file size information
+function updateFileSizeInfo() {
+  if (svgString) {
     const originalSize = new Blob([svgString || '']).size;
     const compactSize = new Blob([svgCompactString || '']).size;
     
-    console.log("Original SVG size:", originalSize, "bytes");
-    console.log("Compact SVG size:", compactSize, "bytes");
-    
-    // Update copy button based on active tab
     const activeTab = document.querySelector('.svg-tab.active').getAttribute('data-tab');
     if (activeTab === 'original') {
-        copySvgBtn.textContent = `Copy SVG (${formatFileSize(originalSize)})`;
+      copySvgBtn.textContent = `Copy SVG (${formatFileSize(originalSize)})`;
+      svgOutput.textContent = svgString;
     } else {
-        copySvgBtn.textContent = `Copy SVG (${formatFileSize(compactSize)})`;
+      copySvgBtn.textContent = `Copy SVG (${formatFileSize(compactSize)})`;
+      svgOutputCompact.textContent = svgCompactString;
     }
     
-    // Update download SVG button - always shows original size
     downloadSvgButton.textContent = `Download SVG (${formatFileSize(originalSize)})`;
     
-    // Calculate actual PNG size by generating the PNG data
+    // Calculate PNG size
     createTempPngAndGetSize().then(exactSize => {
-        downloadPngButton.textContent = `Download PNG (${formatFileSize(exactSize)})`;
+      downloadPngButton.textContent = `Download PNG (${formatFileSize(exactSize)})`;
     }).catch(err => {
-        console.error("Error calculating PNG size:", err);
-        // Fallback to estimation if actual generation fails
-        const rawSize = outputWidth * outputHeight * 4;
-        const estimatedPngSize = Math.round(rawSize * 0.5);
-        downloadPngButton.textContent = `Download PNG (${formatFileSize(estimatedPngSize)})`;
+      console.error("Error calculating PNG size:", err);
+      const rawSize = outputWidth * outputHeight * 4;
+      const estimatedPngSize = Math.round(rawSize * 0.5);
+      downloadPngButton.textContent = `Download PNG (${formatFileSize(estimatedPngSize)})`;
     });
+  }
 }
 
-// Function to create a temporary PNG and get its exact size
+// Create temporary PNG and get size
 async function createTempPngAndGetSize() {
-    return new Promise((resolve, reject) => {
-        try {
-            // Create a temporary canvas with the output dimensions
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = outputWidth;
-            tempCanvas.height = outputHeight;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            // Draw the result onto the temporary canvas at the output size
-            tempCtx.drawImage(resultCanvas, 0, 0, processingWidth, processingHeight, 
-                             0, 0, outputWidth, outputHeight);
-            
-            // Convert to PNG data URL
-            const dataUrl = tempCanvas.toDataURL('image/png');
-            
-            // Calculate size from the data URL
-            // Remove the data:image/png;base64, prefix and calculate byte size
-            const base64 = dataUrl.split(',')[1];
-            const byteSize = Math.ceil((base64.length * 3) / 4); // Base64 size to byte size conversion
-            
-            resolve(byteSize);
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
-
-// Calculate elapsed time since optimization started
-function getElapsedTime() {
-    if (startTime === 0) return 0;
-    return (Date.now() - startTime) / 1000; // Convert to seconds
-}
-
-// Update the result status text with time elapsed
-function updateResultStatus(currentStep, totalSteps, similarity) {
-    const elapsedTime = getElapsedTime().toFixed(1);
-    const statusText = `Step ${currentStep}/${totalSteps} (${similarity.toFixed(1)}%) - ${elapsedTime}s`;
-    resultStatusDiv.textContent = statusText;
-}
-
-// Function to handle dropped files
-function handleDroppedFile(e) {
-    e.preventDefault();
-    
-    // Remove dragover class from all potential drop targets
-    document.querySelectorAll('.dragover').forEach(el => {
-        el.classList.remove('dragover');
-    });
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-        const file = e.dataTransfer.files[0];
-        const input = document.getElementById('image-upload');
-        
-        // Create a DataTransfer to programmatically set the file
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        input.files = dataTransfer.files;
-        
-        // Dispatch a change event to trigger the handler
-        const event = new Event('change', { bubbles: true });
-        input.dispatchEvent(event);
+  return new Promise((resolve, reject) => {
+    try {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = outputWidth;
+      tempCanvas.height = outputHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      // Draw the result at output size
+      tempCtx.drawImage(resultCanvas, 0, 0, processingWidth, processingHeight, 
+                       0, 0, outputWidth, outputHeight);
+      
+      const dataUrl = tempCanvas.toDataURL('image/png');
+      const base64 = dataUrl.split(',')[1];
+      const byteSize = Math.ceil((base64.length * 3) / 4);
+      
+      resolve(byteSize);
+    } catch (error) {
+      reject(error);
     }
+  });
 }
 
-// Function to trigger file upload dialog
-function triggerFileUpload() {
-    if (!isRunning) {
-        document.getElementById('image-upload').click();
+// Reset state after optimization
+function resetOptimizationState() {
+  disableControls(false);
+  
+  if (svgString) {
+    downloadSvgButton.disabled = false;
+    downloadPngButton.disabled = false;
+    updateFileSizeInfo();
+  }
+  
+  isRunning = false;
+}
+
+// Disable controls during processing
+function disableControls(disable) {
+  controlElements.forEach(element => {
+    element.disabled = disable;
+  });
+  
+  if (!svgString || disable) {
+    downloadSvgButton.disabled = true;
+    downloadPngButton.disabled = true;
+  }
+  
+  if (!disable) {
+    startButton.disabled = !sourceImage;
+  }
+}
+
+// Get SVG string from optimizer with minimal processing
+function getRawSvgFromOptimizer() {
+  if (!wasmInstance || !optimizerPtr) return null;
+  
+  try {
+    // Get the SVG string pointer
+    const svgStrPtr = wasmInstance.ccall(
+      'export_svg_string',
+      'number',
+      ['number'],
+      [optimizerPtr]
+    );
+    
+    if (!svgStrPtr) return null;
+    
+    // Convert the C string to a JavaScript string
+    let str = '';
+    let idx = svgStrPtr;
+    const maxLength = 1000000; // Increased for safety
+    let count = 0;
+    
+    while (wasmInstance.HEAPU8[idx] !== 0 && count < maxLength) {
+      str += String.fromCharCode(wasmInstance.HEAPU8[idx]);
+      idx++;
+      count++;
     }
+    
+    // Store raw SVG for debugging
+    rawSvgData = str;
+    
+    return str;
+  } catch (error) {
+    console.error('Error getting SVG from optimizer:', error);
+    return null;
+  }
 }
 
-// Set up drag-and-drop handlers for a target element
-function setupDragAndDrop(target) {
-    // Drag over
-    target.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        target.classList.add('dragover');
-    });
+// Process SVG - transform shapes and fix triangles
+function processSvg(rawSvg) {
+  if (!rawSvg) return;
+  
+  try {
+    // Transform SVG - convert polygons to rectangles and fix triangles
+    svgString = transformSvgShapes(rawSvg);
+    svgCompactString = createCompactSVG(svgString);
     
-    // Drag leave
-    target.addEventListener('dragleave', (e) => {
-        e.preventDefault();
-        target.classList.remove('dragover');
-    });
-    
-    // Drop
-    target.addEventListener('drop', handleDroppedFile);
-    
-    // Click to upload
-    target.addEventListener('click', triggerFileUpload);
+    // Update output display
+    svgOutput.textContent = svgString;
+    svgOutputCompact.textContent = svgCompactString;
+    updateFileSizeInfo();
+  } catch (error) {
+    console.error("Error processing SVG:", error);
+  }
 }
 
-// Load the default example image
-function loadDefaultImage() {
-    if (!sourceImage) {
-        sourceImage = new Image();
-        sourceImage.crossOrigin = "Anonymous"; // Handle CORS if needed
-        
-        sourceImage.onload = () => {
-            updateCanvasSizes();
-            drawOriginalImage();
-            startButton.disabled = false;
-            
-            // Reset progress and status displays
-            updateProgressBorder(0);
-            resultStatusDiv.textContent = '';
-        };
-        
-        sourceImage.onerror = (err) => {
-            console.error("Error loading default image:", err);
-            resultStatusDiv.textContent = 'Error loading default image';
-        };
-        
-        // Load the example image
-        sourceImage.src = './example-dolphin-input-cropped.jpg';
+// Start optimization
+async function startOptimization() {
+  if (isRunning || !sourceImage) return;
+  
+  // Check that at least one shape type is selected
+  if (!useTrianglesCheckbox.checked && !useRectanglesCheckbox.checked && !useEllipsesCheckbox.checked) {
+    alert("Please select at least one shape type.");
+    return;
+  }
+  
+  try {
+    isRunning = true;
+    startTime = Date.now();
+    disableControls(true);
+    resultStatusDiv.textContent = 'Initializing...';
+    resultStatusDiv.style.display = 'block';
+    updateProgressBorder(0);
+    svgOutput.textContent = '';
+    svgOutputCompact.textContent = '';
+    
+    // Load WASM module if not already loaded
+    if (!wasmInstance) {
+      try {
+        wasmInstance = await PrimitiveModule();
+      } catch (error) {
+        throw new Error('Error loading WebAssembly module: ' + error.message);
+      }
     }
+    
+    // Get parameters
+    totalSteps = parseInt(document.getElementById('num-shapes').value, 10);
+    const shapeCandidates = parseInt(document.getElementById('shape-candidates').value, 10);
+    const numMutations = parseInt(document.getElementById('num-mutations').value, 10);
+    
+    // Reset current step counter
+    currentStep = 0;
+    
+    // Get image data
+    const imageData = originalCtx.getImageData(0, 0, processingWidth, processingHeight);
+    
+    // Allocate memory for the image data
+    const targetDataPtr = wasmInstance._malloc(imageData.data.length);
+    wasmInstance.HEAPU8.set(imageData.data, targetDataPtr);
+    
+    // Background color (white)
+    const bgR = 255, bgG = 255, bgB = 255;
+    
+    // Shape type selection - explicit 0 or 1
+    const useTriangles = useTrianglesCheckbox.checked ? 1 : 0;
+    const useRectangles = useRectanglesCheckbox.checked ? 1 : 0;
+    const useEllipses = useEllipsesCheckbox.checked ? 1 : 0;
+    
+    console.log(`Shape selection - Triangles: ${useTriangles}, Rectangles: ${useRectangles}, Ellipses: ${useEllipses}`);
+    
+    // Create the optimizer
+    optimizerPtr = wasmInstance.ccall(
+      'create_optimizer',
+      'number',
+      ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'],
+      [processingWidth, processingHeight, targetDataPtr, bgR, bgG, bgB, useTriangles, useRectangles, useEllipses]
+    );
+    
+    // Free the allocated memory
+    wasmInstance._free(targetDataPtr);
+    
+    // Run optimization in batches
+    const stepsPerBatch = 5;
+    
+    function runBatch() {
+      if (currentStep >= totalSteps) {
+        finalizeOptimization();
+        return;
+      }
+      
+      const batchSize = Math.min(stepsPerBatch, totalSteps - currentStep);
+      
+      // Run a batch of steps
+      wasmInstance.ccall(
+        'run_optimization',
+        null,
+        ['number', 'number', 'number', 'number'],
+        [optimizerPtr, batchSize, shapeCandidates, numMutations]
+      );
+      
+      currentStep += batchSize;
+      
+      // Get current similarity
+      const similarity = wasmInstance.ccall(
+        'get_current_similarity',
+        'number',
+        ['number'],
+        [optimizerPtr]
+      );
+      
+      // Update progress
+      const progress = (currentStep / totalSteps) * 100;
+      updateProgressBorder(progress);
+      
+      // Update status
+      updateResultStatus(currentStep, totalSteps, similarity);
+      
+      // Update result canvas
+      updateResultCanvas();
+      
+      // Get and process raw SVG
+      const rawSvg = getRawSvgFromOptimizer();
+      if (rawSvg) {
+        processSvg(rawSvg);
+      }
+      
+      // Schedule next batch
+      setTimeout(runBatch, 0);
+    }
+    
+    // Start optimization
+    runBatch();
+  } catch (error) {
+    console.error('Optimization error:', error);
+    resultStatusDiv.textContent = 'Error: ' + error.message;
+    resultStatusDiv.style.display = 'block';
+    resetOptimizationState();
+  }
 }
+
+// Update the result canvas
+function updateResultCanvas() {
+  if (!wasmInstance || !optimizerPtr) return;
+  
+  try {
+    // Get pointer to the current image data
+    const currentImagePtr = wasmInstance.ccall(
+      'get_current_image',
+      'number',
+      ['number'],
+      [optimizerPtr]
+    );
+    
+    // Create a new ImageData
+    const imageData = new ImageData(processingWidth, processingHeight);
+    
+    // Copy the data from the Wasm memory
+    const dataView = new Uint8Array(wasmInstance.HEAPU8.buffer, currentImagePtr, processingWidth * processingHeight * 4);
+    imageData.data.set(dataView);
+    
+    // Draw the image data
+    resultCtx.putImageData(imageData, 0, 0);
+    resultWrapper.classList.remove('empty');
+  } catch (error) {
+    console.error('Canvas update error:', error);
+  }
+}
+
+// Finalize optimization
+function finalizeOptimization() {
+  try {
+    // Get and process final SVG
+    const finalSvg = getRawSvgFromOptimizer();
+    if (finalSvg) {
+      processSvg(finalSvg);
+    }
+    
+    // Update final status
+    const similarity = wasmInstance.ccall(
+      'get_current_similarity',
+      'number',
+      ['number'],
+      [optimizerPtr]
+    );
+    
+    const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+    resultStatusDiv.textContent = `Complete: ${similarity.toFixed(1)}% similar - ${totalTime}s total`;
+    
+    // Show complete progress
+    updateProgressBorder(100);
+    
+    resetOptimizationState();
+  } catch (error) {
+    console.error('Finalization error:', error);
+    resultStatusDiv.textContent = 'Error';
+    resultStatusDiv.style.display = 'block';
+    resetOptimizationState();
+  }
+}
+
+// Download SVG
+function downloadSvg() {
+  if (!svgString) return;
+  
+  try {
+    const blob = new Blob([svgString], {type: 'image/svg+xml'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'primitive-drawing-output.svg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('SVG download error:', error);
+    alert('Error downloading SVG: ' + error.message);
+  }
+}
+
+// Download PNG
+function downloadPng() {
+  if (!resultCanvas) return;
+  
+  try {
+    // Create temp canvas with output dimensions
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = outputWidth;
+    tempCanvas.height = outputHeight;
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // Draw the result at output size
+    tempCtx.drawImage(resultCanvas, 0, 0, processingWidth, processingHeight, 
+                     0, 0, outputWidth, outputHeight);
+    
+    // Get data URL and download
+    const pngDataUrl = tempCanvas.toDataURL('image/png');
+    
+    // Download
+    const a = document.createElement('a');
+    a.href = pngDataUrl;
+    a.download = 'primitive-drawing-output.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('PNG download error:', error);
+    alert('Error downloading PNG: ' + error.message);
+  }
+}
+
+// Clean up on unload
+window.addEventListener('unload', () => {
+  try {
+    if (wasmInstance && optimizerPtr) {
+      wasmInstance.ccall('free_optimizer', null, ['number'], [optimizerPtr]);
+    }
+  } catch (error) {
+    console.error('Cleanup error:', error);
+  }
+});
 
 // Event listeners
 inputSizeSelect.addEventListener('change', function() {
-    if (!isRunning) { // Only allow changes when not running
-        updateCanvasSizes();
-        // Input size affects processing, so we need to redraw
-        if (sourceImage) {
-            drawOriginalImage();
-        }
+  if (!isRunning) {
+    updateCanvasSizes();
+    if (sourceImage) {
+      drawOriginalImage();
     }
+  }
 });
 
 outputSizeSelect.addEventListener('change', function() {
-    if (!isRunning) { // Only allow changes when not running
-        // Only update the output dimensions, don't redraw canvas
-        outputWidth = parseInt(outputSizeSelect.value, 10);
-        outputHeight = outputWidth;
+  if (!isRunning) {
+    outputWidth = parseInt(outputSizeSelect.value, 10);
+    outputHeight = outputWidth;
+    
+    if (svgString && rawSvgData) {
+      // Re-process SVG with new dimensions
+      processSvg(rawSvgData);
     }
+  }
 });
 
 fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length === 0) return;
-    
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    
-    reader.onload = (event) => {
-        sourceImage = new Image();
-        sourceImage.onload = () => {
-            updateCanvasSizes();
-            drawOriginalImage();
-            startButton.disabled = false;
-            
-            // Reset progress and status displays
-            updateProgressBorder(0);
-            resultStatusDiv.textContent = '';
-        };
-        sourceImage.src = event.target.result;
+  if (e.target.files.length === 0) return;
+  
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  
+  reader.onload = (event) => {
+    sourceImage = new Image();
+    sourceImage.onload = () => {
+      updateCanvasSizes();
+      drawOriginalImage();
+      startButton.disabled = false;
+      updateProgressBorder(0);
+      resultStatusDiv.textContent = '';
     };
-    
-    reader.readAsDataURL(file);
+    sourceImage.src = event.target.result;
+  };
+  
+  reader.readAsDataURL(file);
+});
+
+resultWrapper.addEventListener('click', function(e) {
+  if (sourceImage && !isRunning && resultStatusDiv.textContent.trim() !== '') {
+    resultStatusDiv.style.display = resultStatusDiv.style.display === 'none' ? 'block' : 'none';
+    e.stopPropagation();
+  }
 });
 
 startButton.addEventListener('click', startOptimization);
 downloadSvgButton.addEventListener('click', downloadSvg);
 downloadPngButton.addEventListener('click', downloadPng);
 
-// Make sure the canvas is properly sized on window resize
+// Handle window resize
 window.addEventListener('resize', () => {
-    enforceSquareWrappers();
-    if (sourceImage) {
-        resizeCanvasToFillWrapper(originalCanvas);
-        resizeCanvasToFillWrapper(resultCanvas);
-    }
+  enforceSquareWrappers();
+  if (sourceImage) {
+    resizeCanvasToFillWrapper(originalCanvas);
+    resizeCanvasToFillWrapper(resultCanvas);
+  }
 });
 
-// Draw the source image on the original canvas, filling the canvas
-function drawOriginalImage() {
-    if (!sourceImage) return;
-    
-    // Clear canvases
-    originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
-    resultCtx.clearRect(0, 0, resultCanvas.width, resultCanvas.height);
-    
-    try {
-        // Calculate source dimensions for a square crop from center
-        let sourceSize, sourceX, sourceY;
-        if (sourceImage.width > sourceImage.height) {
-            sourceSize = sourceImage.height;
-            sourceX = (sourceImage.width - sourceSize) / 2;
-            sourceY = 0;
-        } else {
-            sourceSize = sourceImage.width;
-            sourceX = 0;
-            sourceY = (sourceImage.height - sourceSize) / 2;
-        }
-        
-        // Draw the cropped and resized image on the original canvas
-        originalCtx.drawImage(
-            sourceImage,
-            sourceX, sourceY, sourceSize, sourceSize,
-            0, 0, processingWidth, processingHeight
-        );
-        
-        // Calculate average color for the result canvas
-        const imageData = originalCtx.getImageData(0, 0, processingWidth, processingHeight);
-        const data = imageData.data;
-        let r = 0, g = 0, b = 0;
-        const pixelCount = data.length / 4;
-        
-        for (let i = 0; i < data.length; i += 4) {
-            r += data[i];
-            g += data[i + 1];
-            b += data[i + 2];
-        }
-        
-        r = Math.round(r / pixelCount);
-        g = Math.round(g / pixelCount);
-        b = Math.round(b / pixelCount);
-        
-        // Fill the result canvas with the average color
-        resultCtx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-        resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
-        
-        // Remove empty class from wrappers
-        document.getElementById('original-wrapper').classList.remove('empty');
-        document.getElementById('result-wrapper').classList.remove('empty');
-        
-        // Make sure canvas display size fits wrapper
-        resizeCanvasToFillWrapper(originalCanvas);
-        resizeCanvasToFillWrapper(resultCanvas);
-    } catch (error) {
-        console.error("Error drawing image:", error);
-        // If there's an error, try again with a simpler approach
-        try {
-            // Simple fallback - just stretch to fill
-            originalCtx.drawImage(sourceImage, 0, 0, processingWidth, processingHeight);
-            
-            // Simple average color
-            resultCtx.fillStyle = '#cccccc';
-            resultCtx.fillRect(0, 0, resultCanvas.width, resultCanvas.height);
-            
-            document.getElementById('original-wrapper').classList.remove('empty');
-            document.getElementById('result-wrapper').classList.remove('empty');
-        } catch (fallbackError) {
-            console.error("Fallback drawing also failed:", fallbackError);
-        }
-    }
+// Update copy button based on active tab
+function updateCopyButton() {
+  const activeTab = document.querySelector('.svg-tab.active').getAttribute('data-tab');
+  const copyBtn = document.getElementById('copy-svg-btn');
+  
+  if (activeTab === 'original') {
+    const originalSize = new Blob([svgOutput.textContent || '']).size;
+    copyBtn.textContent = `Copy SVG (${formatFileSize(originalSize)})`;
+  } else {
+    const compactSize = new Blob([svgOutputCompact.textContent || '']).size;
+    copyBtn.textContent = `Copy SVG (${formatFileSize(compactSize)})`;
+  }
 }
 
-// Create an ImageData from the original canvas
-function getOriginalImageData() {
-    return originalCtx.getImageData(0, 0, processingWidth, processingHeight);
-}
-
-// Validate shape selection
-function validateShapeSelection() {
-    // At least one shape type must be selected
-    if (!useTrianglesCheckbox.checked && !useRectanglesCheckbox.checked && !useEllipsesCheckbox.checked) {
-        alert("Please select at least one shape type.");
-        return false;
-    }
-    return true;
-}
-
-// Disable all control elements during optimization
-function disableControls(disable) {
-    // Disable all form controls and buttons
-    controlElements.forEach(element => {
-        element.disabled = disable;
+// Copy active SVG tab content
+function copyActiveSvg() {
+  if (copyInProgress) return;
+  copyInProgress = true;
+  
+  // Hide any previous success messages
+  copySuccessDiv.classList.remove('visible');
+  copySuccessCompactDiv.classList.remove('visible');
+  
+  const activeTab = document.querySelector('.svg-tab.active').getAttribute('data-tab');
+  const content = activeTab === 'original' ? svgOutput.textContent : svgOutputCompact.textContent;
+  const successElement = activeTab === 'original' ? copySuccessDiv : copySuccessCompactDiv;
+  
+  if (!content) {
+    copyInProgress = false;
+    return;
+  }
+  
+  navigator.clipboard.writeText(content)
+    .then(() => {
+      successElement.classList.add('visible');
+      setTimeout(() => {
+        successElement.classList.remove('visible');
+        copyInProgress = false;
+      }, 1500);
+    })
+    .catch(err => {
+      console.error('Failed to copy SVG:', err);
+      copyInProgress = false;
+      alert('Failed to copy SVG to clipboard');
     });
-    
-    // Always disable download buttons if no SVG is available
-    if (!svgString || disable) {
-        downloadSvgButton.disabled = true;
-        downloadPngButton.disabled = true;
-    }
-    
-    // Specific logic for start button
-    if (!disable) {
-        // Only enable start button if there's a source image
-        startButton.disabled = !sourceImage;
-    }
-    
-    // Add visual indication that controls are disabled
-    const controlsContainer = document.querySelector('.controls-container');
-    if (disable) {
-        controlsContainer.classList.add('processing');
-    } else {
-        controlsContainer.classList.remove('processing');
-    }
 }
 
-// Prepare the WASM module and start optimization
-async function startOptimization() {
-    if (isRunning || !sourceImage) return;
-    if (!validateShapeSelection()) return;
-    
-    try {
-        isRunning = true;
-        startTime = Date.now(); // Record start time
-        disableControls(true);
-        statusDiv.textContent = 'Initializing...';
-        resultStatusDiv.textContent = 'Initializing...';
-        updateProgressBorder(0);
-        svgOutput.textContent = ''; // Clear previous SVG output
-        svgOutputCompact.textContent = ''; // Clear compact SVG output
-        
-        // Load the Wasm module if not already loaded
-        if (!wasmInstance) {
-            try {
-                wasmInstance = await PrimitiveModule();
-            } catch (error) {
-                throw new Error('Error loading WebAssembly module: ' + error.message);
-            }
-        }
-        
-        // Get parameters
-        totalSteps = parseInt(document.getElementById('num-shapes').value, 10);
-        const shapeCandidates = parseInt(document.getElementById('shape-candidates').value, 10);
-        const numMutations = parseInt(document.getElementById('num-mutations').value, 10);
-        
-        // Reset current step counter
-        currentStep = 0;
-        
-        // Get image data from the original canvas
-        const imageData = getOriginalImageData();
-        
-        // Allocate memory for the image data in the Wasm module
-        const targetDataPtr = wasmInstance._malloc(imageData.data.length);
-        wasmInstance.HEAPU8.set(imageData.data, targetDataPtr);
-        
-        // Auto-detect background color (use white for now)
-        const bgR = 255, bgG = 255, bgB = 255;
-        
-        // Get shape type selection
-        const useTriangles = useTrianglesCheckbox.checked ? 1 : 0;
-        const useRectangles = useRectanglesCheckbox.checked ? 1 : 0;
-        const useEllipses = useEllipsesCheckbox.checked ? 1 : 0;
-        
-        // Create the optimizer - now correctly passing shape type selection
-        optimizerPtr = wasmInstance.ccall(
-            'create_optimizer',
-            'number',
-            ['number', 'number', 'number', 'number', 'number', 'number', 'number', 'number', 'number'],
-            [processingWidth, processingHeight, targetDataPtr, bgR, bgG, bgB, useTriangles, useRectangles, useEllipses]
-        );
-        
-        // Free the allocated memory for the image data
-        wasmInstance._free(targetDataPtr);
-        
-        // Run the optimization step by step to show progress
-        const stepsPerBatch = 5;
-        
-        function runBatch() {
-            if (currentStep >= totalSteps) {
-                finalizeOptimization();
-                return;
-            }
-            
-            const batchSize = Math.min(stepsPerBatch, totalSteps - currentStep);
-            
-            // Run a batch of optimization steps
-            wasmInstance.ccall(
-                'run_optimization',
-                null,
-                ['number', 'number', 'number', 'number'],
-                [optimizerPtr, batchSize, shapeCandidates, numMutations]
-            );
-            
-            currentStep += batchSize;
-            
-            // Get the current similarity
-            const similarity = wasmInstance.ccall(
-                'get_current_similarity',
-                'number',
-                ['number'],
-                [optimizerPtr]
-            );
-            
-            // Update progress
-            const progress = (currentStep / totalSteps) * 100;
-            updateProgressBorder(progress);
-            
-            // Update status text with step count and elapsed time
-            updateResultStatus(currentStep, totalSteps, similarity);
-            
-            // Update the result canvas
-            updateResultCanvas();
-            
-            // Get current SVG and update output (for real-time updates)
-            updateSvgOutput();
-            
-            // Schedule the next batch
-            setTimeout(runBatch, 0);
-        }
-        
-        // Start the optimization process
-        runBatch();
-    } catch (error) {
-        console.error('Optimization error:', error);
-        statusDiv.textContent = 'Error: ' + error.message;
-        resultStatusDiv.textContent = 'Error';
-        resetOptimizationState();
-    }
-}
 
-// Update the SVG output area with current progress
-function updateSvgOutput() {
-    try {
-        if (!wasmInstance || !optimizerPtr) return;
-        
-        // Get the SVG string
-        const svgStrPtr = wasmInstance.ccall(
-            'export_svg_string',
-            'number',
-            ['number'],
-            [optimizerPtr]
-        );
-        
-        if (!svgStrPtr) return;
-        
-        // Convert the C string to a JavaScript string
-        let str = '';
-        let idx = svgStrPtr;
-        const max_length = 100000; // Safety limit
-        let count = 0;
-        
-        while (wasmInstance.HEAPU8[idx] !== 0 && count < max_length) {
-            str += String.fromCharCode(wasmInstance.HEAPU8[idx]);
-            idx++;
-            count++;
-        }
-        
-        if (count >= max_length) {
-            console.warn('SVG string truncated due to length limit');
-        }
-        
-        // Update SVG with correct output dimensions
-        str = str.replace(
-            /width="(\d+)" height="(\d+)"/,
-            `width="${outputWidth}" height="${outputHeight}"`
-        );
-        
-        // Store both versions in variables 
-        svgString = str;
-        svgCompactString = createCompactSVG(str);
-        
-        console.log("Generated SVGs - Original:", svgString.length, "bytes, Compact:", svgCompactString.length, "bytes");
-        
-        // Display the SVG string in the output areas
-        svgOutput.textContent = svgString;
-        svgOutputCompact.textContent = svgCompactString;
-        
-        // Update file size information
-        updateFileSizeInfo();
-        
-    } catch (error) {
-        console.error('SVG output update error:', error);
-    }
-}
 
-// Update the result canvas with the current state
-function updateResultCanvas() {
-    if (!wasmInstance || !optimizerPtr) return;
-    
-    try {
-        // Get a pointer to the current image data
-        const currentImagePtr = wasmInstance.ccall(
-            'get_current_image',
-            'number',
-            ['number'],
-            [optimizerPtr]
-        );
-        
-        // Create a new ImageData
-        const imageData = new ImageData(processingWidth, processingHeight);
-        
-        // Copy the data from the Wasm memory
-        const dataView = new Uint8Array(wasmInstance.HEAPU8.buffer, currentImagePtr, processingWidth * processingHeight * 4);
-        imageData.data.set(dataView);
-        
-        // Draw the image data to the canvas
-        resultCtx.putImageData(imageData, 0, 0);
-        
-        // Make sure the result wrapper doesn't have empty class
-        document.getElementById('result-wrapper').classList.remove('empty');
-    } catch (error) {
-        console.error('Canvas update error:', error);
-    }
-}
 
-// Finalize the optimization and get the SVG output
-function finalizeOptimization() {
-    try {
-        if (!wasmInstance || !optimizerPtr) {
-            throw new Error('WebAssembly instance or optimizer not initialized');
-        }
-        
-        // Get the SVG string
-        const svgStrPtr = wasmInstance.ccall(
-            'export_svg_string',
-            'number',
-            ['number'],
-            [optimizerPtr]
-        );
-        
-        if (!svgStrPtr) {
-            throw new Error('Failed to get SVG output');
-        }
-        
-        // Convert the C string to a JavaScript string
-        let str = '';
-        let idx = svgStrPtr;
-        const max_length = 100000; // Safety limit
-        let count = 0;
-        
-        while (wasmInstance.HEAPU8[idx] !== 0 && count < max_length) {
-            str += String.fromCharCode(wasmInstance.HEAPU8[idx]);
-            idx++;
-            count++;
-        }
-        
-        if (count >= max_length) {
-            console.warn('SVG string truncated due to length limit');
-        }
-        
-        svgString = str;
-        console.log('SVG string length:', svgString.length);
-        
-        // Update SVG with correct output dimensions
-        svgString = svgString.replace(
-            /width="(\d+)" height="(\d+)"/,
-            `width="${outputWidth}" height="${outputHeight}"`
-        );
-        
-        // Display the SVG string in both output areas
-        svgOutput.textContent = svgString;
-        svgCompactString = createCompactSVG(svgString);
-        svgOutputCompact.textContent = svgCompactString;
-        
-        // Update file size information
-        updateFileSizeInfo();
-        
-        // Update status with final similarity and total time
-        const similarity = wasmInstance.ccall(
-            'get_current_similarity',
-            'number',
-            ['number'],
-            [optimizerPtr]
-        );
-        
-        const totalTime = getElapsedTime().toFixed(1);
-        resultStatusDiv.textContent = `Complete: ${similarity.toFixed(1)}% similar - ${totalTime}s total`;
-        
-        // Ensure progress is shown as complete
-        updateProgressBorder(100);
-        
-        resetOptimizationState();
-    } catch (error) {
-        console.error('Finalization error:', error);
-        resultStatusDiv.textContent = 'Error';
-        resetOptimizationState();
-    }
-}
 
-// Reset state after optimization (success or failure)
-function resetOptimizationState() {
-    disableControls(false);
-    
-    // Enable download buttons if we have SVG content
-    if (svgString) {
-        downloadSvgButton.disabled = false;
-        downloadPngButton.disabled = false;
-        
-        // Update file size information on buttons
-        updateFileSizeInfo();
-    }
-    
-    isRunning = false;
-}
 
-// Download the SVG file
-function downloadSvg() {
-    if (!svgString) return;
-    
-    try {
-        // Always use the original SVG version, just update output dimensions
-        let outputSvg = svgString.replace(
-            /width="(\d+)" height="(\d+)"/,
-            `width="${outputWidth}" height="${outputHeight}"`
-        );
-        
-        const blob = new Blob([outputSvg], {type: 'image/svg+xml'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'primitive_art.svg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error('SVG download error:', error);
-        alert('Error downloading SVG: ' + error.message);
-    }
-}
-
-// Download the PNG file
-function downloadPng() {
-    if (!resultCanvas) return;
-    
-    try {
-        // Create a temporary canvas with the output dimensions
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = outputWidth;
-        tempCanvas.height = outputHeight;
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        // Draw the result onto the temporary canvas at the output size
-        tempCtx.drawImage(resultCanvas, 0, 0, processingWidth, processingHeight, 
-                          0, 0, outputWidth, outputHeight);
-        
-        // Use the temporary canvas for download
-        const pngDataUrl = tempCanvas.toDataURL('image/png');
-        
-        // Calculate actual file size for updating button
-        const base64Data = pngDataUrl.split(',')[1];
-        const pngSize = Math.ceil((base64Data.length * 3) / 4);
-        downloadPngButton.textContent = `Download PNG (${formatFileSize(pngSize)})`;
-        
-        // Create download link
-        const a = document.createElement('a');
-        a.href = pngDataUrl;
-        a.download = 'primitive_art.png';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    } catch (error) {
-        console.error('PNG download error:', error);
-        alert('Error downloading PNG: ' + error.message);
-    }
-}
-
-// Clean up resources when the page is unloaded
-window.addEventListener('unload', () => {
-    try {
-        if (wasmInstance && optimizerPtr) {
-            wasmInstance.ccall(
-                'free_optimizer',
-                null,
-                ['number'],
-                [optimizerPtr]
-            );
-        }
-    } catch (error) {
-        console.error('Cleanup error:', error);
-    }
-});
-
-// Initialize on load
-function initialize() {
-    // Initialize canvas sizes
-    updateCanvasSizes();
-    
-    // Enforce square wrappers
-    enforceSquareWrappers();
-    
-    // Disable download buttons initially
-    downloadSvgButton.disabled = true;
-    downloadPngButton.disabled = true;
-    
-    // Set up initial progress border
-    updateProgressBorder(0);
-    
-    // Add resize observer to ensure canvases are always visible
-    const resizeObserver = new ResizeObserver(entries => {
-        for (let entry of entries) {
-            if (entry.target.classList.contains('canvas-wrapper')) {
-                const canvas = entry.target.querySelector('canvas');
-                if (canvas) {
-                    resizeCanvasToFillWrapper(canvas);
-                }
-            }
-        }
-    });
-    
-    // Observe both canvas wrappers
-    document.querySelectorAll('.canvas-wrapper').forEach(wrapper => {
-        resizeObserver.observe(wrapper);
-    });
-    
-    // Clear any previous event listeners (to avoid duplicates)
-    const dropTargets = [originalWrapper, resultWrapper, uploadLabel];
-    
-    // Set up drag and drop for all drop targets
-    dropTargets.forEach(target => {
-        setupDragAndDrop(target);
-    });
-    
-    // Load the default image if no image is already loaded
-    setTimeout(loadDefaultImage, 500); // Short delay to ensure page is fully loaded
-}
-
-// Run initialization when DOM is fully loaded
-document.addEventListener('DOMContentLoaded', initialize);
-// Also run on load to be extra safe
-window.addEventListener('load', initialize);

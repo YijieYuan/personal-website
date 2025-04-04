@@ -11,11 +11,14 @@
   <!-- These fonts will be used by your global styles -->
   <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet"/>
 
-  <!-- Global styles & navbar (do not override) -->
-  <link rel="stylesheet" href="../../style.css" />
-  <link rel="stylesheet" href="../../navbar.css" />
   <!-- Page-specific styles -->
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Global styles & navbar (do not override) -->
+  <link rel="stylesheet" href="../../navbar.css" />
+  <link rel="stylesheet" href="../../style.css" />
+  
+
 
   <script src="../../script.js" defer></script>
 </head>
@@ -31,227 +34,165 @@
     </nav>
   </header>
 
-  <h1>Primitive Drawing</h1>
-  
-  <div class="game-wrapper">
-    <div class="game-container">
-      <div class="canvas-container">
-        <!-- Original image canvas (click or drag to upload) -->
-        <div class="canvas-wrapper empty" id="original-wrapper">
-          <div class="canvas-label">Source</div>
-          <canvas id="original-canvas"></canvas>
-        </div>
-        <!-- Generated result canvas -->
-        <div class="canvas-wrapper empty" id="result-wrapper">
-          <div class="canvas-label">Result</div>
-          <div class="progress-border"></div>
-          <div class="result-status" id="result-status"></div>
-          <canvas id="result-canvas"></canvas>
-        </div>
+  <div class="container">
+    <h1>Primitive Drawing</h1>
+    
+    <!-- Canvas container -->
+    <div class="canvas-container">
+      <!-- Original image canvas -->
+      <div class="canvas-wrapper empty" id="original-wrapper">
+        <div class="canvas-label">Source</div>
+        <canvas id="original-canvas"></canvas>
       </div>
-
-      <div class="controls-container">
-        <!-- Hidden file input; will be triggered by the label or canvas click -->
-        <input type="file" id="image-upload" accept="image/*" style="display: none;" />
-        
-        <div class="controls-section">
-          <div class="controls-title">Configuration</div>
-          
-          <div class="upload-section">
-            <label for="image-upload" class="upload-label" id="upload-label">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-              Upload Image
-            </label>
-            <div class="upload-hint">or drag and drop an image onto the upload button or source box</div>
-          </div>
-          
-          <div class="controls">
-            <div class="control-group">
-              <label for="input-size">Processing Size:</label>
-              <select id="input-size">
-                <option value="128">128x128</option>
-                <option value="256" selected>256x256</option>
-                <option value="384">384x384</option>
-                <option value="512">512x512</option>
-              </select>
-            </div>
-            
-            <div class="control-group">
-              <label for="output-size">Output SVG Size:</label>
-              <select id="output-size">
-                <option value="128">128x128</option>
-                <option value="256" selected>256x256</option>
-                <option value="512">512x512</option>
-                <option value="1024">1024x1024</option>
-              </select>
-            </div>
-            
-            <div class="control-group">
-              <label for="num-shapes">Number of Shapes:</label>
-              <input type="number" id="num-shapes" value="200" min="1" max="500">
-            </div>
-            
-            <div class="control-group">
-              <label for="shape-candidates">Candidates per Step:</label>
-              <input type="number" id="shape-candidates" value="200" min="1" max="500">
-            </div>
-            
-            <div class="control-group">
-              <label for="num-mutations">Max Mutations:</label>
-              <input type="number" id="num-mutations" value="30" min="1" max="100">
-            </div>
-            
-            <div class="control-group">
-              <label>Shape Types:</label>
-              <div class="shape-options">
-                <label>
-                  <input type="checkbox" id="use-triangles" checked> Triangles
-                </label>
-                <label>
-                  <input type="checkbox" id="use-rectangles" checked> Rectangles
-                </label>
-                <label>
-                  <input type="checkbox" id="use-ellipses" checked> Ellipses
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="action-controls">
-            <button id="start-button" disabled>Start Optimization</button>
-            <button id="download-svg" disabled>Download SVG</button>
-            <button id="download-png" disabled>Download PNG</button>
-          </div>
-        </div>
+      <!-- Generated result canvas -->
+      <div class="canvas-wrapper empty" id="result-wrapper">
+        <div class="canvas-label">Result</div>
+        <div class="progress-border"></div>
+        <div class="result-status" id="result-status"></div>
+        <canvas id="result-canvas"></canvas>
       </div>
     </div>
 
-    <div class="info-section">
-      <div class="optimization-status">
-        <div id="progress">
-          <div id="progress-bar"></div>
-        </div>
-        <div id="status" class="status-text" style="display: none;">Ready to start</div>
+    <!-- Configuration card -->
+    <div class="card">
+      <h2 class="card-title">Configuration</h2>
+      
+      <div class="upload-section">
+        <button class="upload-btn" id="upload-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          Upload Image
+        </button>
+        <span class="upload-hint">or drag and drop an image onto the upload button or source box</span>
+        <input type="file" id="image-upload" accept="image/*" style="display: none;" />
       </div>
       
-      <!-- Updated SVG Output Section with tabs and copy button on the same row -->
-      <div class="svg-output-section">
-        <div class="svg-header">
-          <h2 class="svg-title">SVG Output</h2>
-        </div>
-        
-        <div class="svg-tabs-container">
-          <div class="svg-tabs">
-            <div class="svg-tab active" data-tab="original">Original</div>
-            <div class="svg-tab" data-tab="compact">Compact</div>
-          </div>
-          
-          <div class="svg-actions">
-            <button id="copy-svg-btn" class="svg-copy-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-              </svg>
-              Copy SVG
-            </button>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="input-size">Processing Size:</label>
+          <div class="input-wrapper">
+            <select id="input-size" class="form-control">
+              <option value="128">128×128</option>
+              <option value="256" selected>256×256</option>
+              <option value="384">384×384</option>
+              <option value="512">512×512</option>
+            </select>
           </div>
         </div>
         
-        <div class="svg-content active" id="original-tab">
-          <div class="copy-success" id="copy-success">Copied!</div>
-          <pre id="svg-output"></pre>
+        <div class="form-group">
+          <label for="output-size">Output SVG Size:</label>
+          <div class="input-wrapper">
+            <select id="output-size" class="form-control">
+              <option value="128">128×128</option>
+              <option value="256" selected>256×256</option>
+              <option value="512">512×512</option>
+              <option value="1024">1024×1024</option>
+            </select>
+          </div>
         </div>
         
-        <div class="svg-content" id="compact-tab">
-          <div class="copy-success" id="copy-success-compact">Copied!</div>
-          <pre id="svg-output-compact"></pre>
+        <div class="form-group">
+          <label for="num-shapes">Number of Shapes:</label>
+          <div class="input-wrapper slider-wrapper">
+            <div class="slider-container">
+              <input type="range" id="shapes-slider" class="form-slider" min="1" max="1000" value="500">
+            </div>
+            <input type="number" id="num-shapes" class="form-control number-input" value="500" min="1" max="1000">
+          </div>
         </div>
+        
+        <div class="form-group">
+          <label for="shape-candidates">Candidates per Step:</label>
+          <div class="input-wrapper slider-wrapper">
+            <div class="slider-container">
+              <input type="range" id="candidates-slider" class="form-slider" min="1" max="1000" value="350">
+            </div>
+            <input type="number" id="shape-candidates" class="form-control number-input" value="350" min="1" max="1000">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="num-mutations">Max Mutations:</label>
+          <div class="input-wrapper slider-wrapper">
+            <div class="slider-container">
+              <input type="range" id="mutations-slider" class="form-slider" min="1" max="200" value="50">
+            </div>
+            <input type="number" id="num-mutations" class="form-control number-input" value="50" min="1" max="200">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Shape Types:</label>
+          <div class="input-wrapper shape-options">
+            <label class="shape-option active" id="triangles-label">
+              <input type="checkbox" id="use-triangles" checked>
+              <svg viewBox="0 0 24 24"><polygon points="12,7 5,19 19,19"/></svg>
+            </label>
+            <label class="shape-option active" id="rectangles-label">
+              <input type="checkbox" id="use-rectangles" checked>
+              <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg>
+            </label>
+            <label class="shape-option active" id="ellipses-label">
+              <input type="checkbox" id="use-ellipses" checked>
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/></svg>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="button-group">
+        <button class="btn primary" id="start-button">Start Optimization</button>
+        <button class="btn secondary" id="download-svg" disabled>Download SVG</button>
+        <button class="btn secondary" id="download-png" disabled>Download PNG</button>
+      </div>
+    </div>
+    
+    <!-- SVG Output -->
+    <div class="card svg-output-section">
+      <div class="svg-header">
+        <h2 class="card-title">SVG Output</h2>
+      </div>
+      
+      <div class="svg-tabs-container">
+        <div class="svg-tabs">
+          <div class="svg-tab active" data-tab="original">Original</div>
+          <div class="svg-tab" data-tab="compact">Compact</div>
+        </div>
+        
+        <div class="svg-actions">
+          <button id="copy-svg-btn" class="copy-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy SVG
+          </button>
+        </div>
+      </div>
+      
+      <div class="svg-content active" id="original-tab">
+        <div class="copy-success" id="copy-success">Copied!</div>
+        <pre id="svg-output"></pre>
+      </div>
+      
+      <div class="svg-content" id="compact-tab">
+        <div class="copy-success" id="copy-success-compact">Copied!</div>
+        <pre id="svg-output-compact"></pre>
       </div>
     </div>
   </div>
 
   <footer>
-    &copy; Yijie Yuan.
+    <p>&copy; Yijie Yuan</p>
   </footer>
 
-  <!-- Include your additional scripts -->
+  <!-- Scripts -->
   <script src="primitive.js"></script>
   <script src="app.js"></script>
 
-  <!-- SVG Tab Switching -->
-  <script>
-    // SVG Tab Switching
-    document.querySelectorAll('.svg-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        // Remove active class from all tabs and content
-        document.querySelectorAll('.svg-tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.svg-content').forEach(c => c.classList.remove('active'));
-        
-        // Add active class to clicked tab
-        tab.classList.add('active');
-        
-        // Show corresponding content
-        const tabId = tab.getAttribute('data-tab');
-        document.getElementById(tabId + '-tab').classList.add('active');
-        
-        // Update the copy button to match the active tab
-        updateCopyButton();
-      });
-    });
-    
-    // Function to update the copy button based on active tab
-    function updateCopyButton() {
-      const activeTab = document.querySelector('.svg-tab.active').getAttribute('data-tab');
-      const copyBtn = document.getElementById('copy-svg-btn');
-      
-      if (activeTab === 'original') {
-        copyBtn.onclick = copyOriginalSvg;
-      } else {
-        copyBtn.onclick = copyCompactSvg;
-      }
-    }
-    
-    // Copy Original SVG
-    function copyOriginalSvg() {
-      const svgContent = document.getElementById('svg-output').textContent;
-      if (svgContent) {
-        navigator.clipboard.writeText(svgContent)
-          .then(() => {
-            showCopySuccess('copy-success');
-          })
-          .catch(err => {
-            console.error('Failed to copy SVG: ', err);
-            alert('Failed to copy SVG to clipboard');
-          });
-      }
-    }
-    
-    // Copy Compact SVG
-    function copyCompactSvg() {
-      const svgContent = document.getElementById('svg-output-compact').textContent;
-      if (svgContent) {
-        navigator.clipboard.writeText(svgContent)
-          .then(() => {
-            showCopySuccess('copy-success-compact');
-          })
-          .catch(err => {
-            console.error('Failed to copy SVG: ', err);
-            alert('Failed to copy SVG to clipboard');
-          });
-      }
-    }
-    
-    // Show copy success message
-    function showCopySuccess(elementId) {
-      const copySuccess = document.getElementById(elementId);
-      copySuccess.classList.add('visible');
-      setTimeout(() => {
-        copySuccess.classList.remove('visible');
-      }, 1500);
-    }
-    
-    // Initialize copy button
-    updateCopyButton();
-  </script>
 </body>
 </html>
