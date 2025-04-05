@@ -1,35 +1,118 @@
 /* Project-specific styling */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
 
-/* Override paragraph styles for better readability in projects.html */
+/* Override paragraph styles for better readability in projects page */
 p {
-    font-family: 'Inter', sans-serif;
-    font-size: 1.1rem;
     line-height: 1.8;
-    color: #444; /* Adjusted for better readability on dark backgrounds */
+    color: #444;
     margin-bottom: 15px;
     width: 100%;
     max-width: none;
     text-align: justify;
 }
 
-.publications-title {
-    font-size: 0.95rem; /* Smaller font size */
-    color: #555; /* Distinct blue */
-    margin-top: 5px; /* Reduced gap above */
-    margin-bottom: -10px; /* Reduced gap below */
+/* Project links styling - subtler hover effect */
+.project-title {
+    display: block;
     font-weight: bold;
+    margin-bottom: 0.8rem;
+    font-size: 1.05rem;
 }
 
+.project-title a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.project-title a:hover {
+    opacity: 0.8; /* Subtle opacity change instead of color change */
+    text-decoration: none;
+}
+
+/* Project description with reduced bottom margin */
+.project-description {
+    margin-bottom: 8px; /* Reduced from 15px */
+}
+
+/* Native details/summary styling - with reduced spacing */
+.publications-details {
+    margin-top: 0; /* Reduced from 10px */
+    margin-bottom: 15px;
+}
+
+.publications-summary {
+    font-size: 0.85rem; /* Slightly smaller */
+    color: #777; /* Lighter color for more humble appearance */
+    font-weight: normal; /* Not bold for humbler appearance */
+    cursor: pointer;
+    user-select: none;
+    padding: 0; /* Removed padding */
+    display: flex;
+    align-items: center;
+    height: 20px; /* Fixed height for consistency */
+}
+
+.publications-summary:hover {
+    color: #555;
+}
+
+/* Remove default arrow in some browsers */
+.publications-summary::-webkit-details-marker {
+    display: none;
+}
+
+/* More subtle publication counter */
+.publications-counter {
+    display: inline-block;
+    font-size: 0.8rem;
+    color: #999; /* Even lighter color */
+    margin-left: 4px; /* Slightly reduced */
+    font-weight: normal;
+}
+
+/* Right-pointing arrow styling - slightly larger and aligned with text */
+.publications-summary::before {
+    content: '›'; /* Right arrow character */
+    display: inline-block;
+    margin-right: 6px; /* Slightly reduced */
+    font-size: 22px; /* Increased size for better visibility */
+    color: #999; /* Lighter color */
+    transition: transform 0.2s ease;
+    position: relative;
+    top: -2px; /* Moves the arrow up to align with text */
+    line-height: 0; /* Helps with vertical alignment */
+}
+
+/* When details element is open */
+details[open] .publications-summary::before {
+    transform: rotate(90deg);
+}
+
+/* Add space after the project if details are open */
+details[open] {
+    margin-bottom: 15px;
+}
+
+/* Reduced indentation for publications list */
 .publications-list {
-    font-size: 0.8rem; /* Smaller font size */
-    color: #555; /* Slightly lighter than main text */
+    font-size: 0.8rem;
+    color: #555;
     list-style-type: square;
-    margin-left: 15px;
+    margin-left: 5px;
+    padding-left: 15px;
+    margin-top: 10px;
+    margin-bottom: 0; /* No bottom margin */
 }
 
 .publications-list li {
-    margin-bottom: 5px; /* Reduced spacing between items */
+    margin-bottom: 5px;
+    text-indent: -5px;
+    padding-left: 5px;
+}
+
+.publications-list li:last-child {
+    margin-bottom: 0; /* No margin on last item */
 }
 
 .publications-list li a {
@@ -37,26 +120,19 @@ p {
     word-break: break-all;
 }
 
-/* Make project links stand out */
-.section-content strong a {
-    color: var(--accent-color);
-    text-decoration: none;
-    transition: all 0.2s ease;
+/* More compact spacing between projects */
+.project-container {
+    margin-bottom: 25px; /* Consistent spacing between projects */
 }
 
-.section-content strong a:hover {
-    text-decoration: underline;
+.project-container:last-child {
+    margin-bottom: 0;
 }
 
 /* Responsive adjustments for mobile */
 @media (max-width: 768px) {
-    /* Add more space between projects on mobile */
-    .section-content > p:first-of-type {
-        margin-top: 0.5rem;
-    }
-    
     /* Add visual separation between projects on mobile */
-    .section-content > p:nth-of-type(3) {
+    .project-container:not(:first-child) {
         margin-top: 2rem;
         padding-top: 1.5rem;
         border-top: 1px solid var(--separator-color);

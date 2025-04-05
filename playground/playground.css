@@ -1,99 +1,386 @@
-/* playground.css */
+/* Refined Playground Styling with Improved Spacing */
 
-/* Add a top padding to the board games content so its vertical position matches the home page */
-#board-games .section-content {
-  padding-top: 0.5em;
+/* Section styling with balanced spacing */
+.section {
+  margin-bottom: 4.5rem;
+  width: 100%;
 }
 
-/* Game grid and card styles */
+.section-title {
+  font-family: 'Lato', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  margin-bottom: 2.5rem;
+  margin-top: 4rem;
+  color: var(--text-color);
+  position: relative;
+  display: block;
+  text-align: center;
+  opacity: 0.78;
+  text-transform: uppercase;
+}
+
+/* Subtle fade-in line for section titles */
+.section-title::after {
+  content: '';
+  display: block;
+  width: 30px;
+  height: 1px;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin: 0.8rem auto 0;
+  opacity: 0.5;
+}
+
+/* Card grid with harmonious spacing */
 .game-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 1200px; 
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.8rem 2.2rem;
+  width: 92%;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 0 20px;
-  gap: 30px;
 }
 
+/* Card styling with refined corners and shadows */
 .game-card {
   position: relative;
-  width: 215px;
-  margin: 20px 0;
-  flex: 0 0 calc(33.333% - 30px);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.game-card::before {
-  content: "";
-  display: block;
-  padding-top: calc((200 / 215) * 100%); /* Maintains original 200/215 aspect ratio */
+/* Card frame styling */
+.card-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  transform: translateZ(-1px);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 4px 25px rgba(0, 0, 0, 0.12);
 }
 
+.game-card:hover .card-frame {
+  opacity: 1;
+}
+
+/* Card link container with matching radius */
 .game-card > a {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  overflow: hidden;
   text-decoration: none;
   color: inherit;
+  outline: none;
+  display: block;
+  transform: translateZ(0);
+  transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Image container styling */
+.game-card-image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  transform: translateZ(0);
+}
+
+/* Subtle light overlay on images */
+.game-card-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Gradient overlay for text readability */
+.game-card-image::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 65%,
+    rgba(0, 0, 0, 0.25) 100%
+  );
+  opacity: 0.7;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+.game-card:hover .game-card-image::after {
+  opacity: 0.9;
+}
+
+/* Image styling */
+.game-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  will-change: transform;
+  border-radius: 12px;
+}
+
+/* Content overlay styling */
+.game-card-content {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  z-index: 2;
+}
+
+/* Title styling */
+.game-title {
+  font-family: 'Merriweather', serif;
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+  color: white;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+  transform: translateY(8px);
+  transition: transform 0.4s ease 0.1s, opacity 0.4s ease 0.1s;
+  opacity: 0;
+  background-color: transparent;
+  padding: 0.4rem 1rem;
+  position: relative;
+  z-index: 2;
+  letter-spacing: 0.01em;
+}
+
+/* Refined hover effects */
+.game-card:hover {
+  z-index: 5;
+  transform: translateY(-7px);
 }
 
 .game-card:hover > a {
-  transform: translateY(-5px);
+  box-shadow: 
+    0 12px 28px rgba(0, 0, 0, 0.12),
+    0 5px 10px rgba(0, 0, 0, 0.07);
 }
 
+.game-card:hover .game-card-image img {
+  transform: scale(1.04);
+}
+
+.game-card:hover .game-card-content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.game-card:hover .game-title {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Page transition animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.game-card {
+  opacity: 0;
+  animation: fadeInUp 0.6s ease-out forwards;
+  animation-delay: calc(var(--card-index, 0) * 0.1s);
+}
+
+/* Page title with elegant spacing */
+.page-title {
+  font-family: 'Merriweather', serif;
+  font-size: 1.9rem;
+  font-weight: 400;
+  margin: 2.8rem 0 1.2rem;
+  color: var(--text-color);
+  text-align: center;
+  letter-spacing: 0.025em;
+  opacity: 0.92;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+.page-title::after {
+  content: '';
+  display: block;
+  width: 35px;
+  height: 1.5px;
+  background-color: rgba(0, 0, 0, 0.08);
+  margin: 0.8rem auto 0;
+}
+
+/* Description styling with balanced spacing */
+.page-description {
+  max-width: 540px;
+  margin: 0 auto 3.5rem;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--subtitle-color);
+  font-weight: 300;
+  opacity: 0.85;
+  letter-spacing: 0.01em;
+  padding: 0 1rem;
+}
+
+/* Fix for rounded corners */
+.game-card, 
+.game-card > a, 
+.game-card-image, 
 .game-card img {
-  width: 100%;
-  height: 85%;
-  object-fit: cover;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
 }
 
-.game-title {
-  height: 15%;
-  width: 100%;
-  font-size: 0.9em;
-  font-weight: bold;
-  padding: 6px;
-  background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Mobile device text visibility */
+@media (hover: none) {
+  .game-card-content {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .game-title {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .game-card-image::after {
+    opacity: 0.9;
+  }
 }
 
-/* Responsive design based on container width */
-@media (max-width: 1199px) {
+/* Responsive adjustments */
+@media (max-width: 1200px) {
   .game-grid {
-    justify-content: flex-start;
+    grid-template-columns: repeat(2, 1fr);
+    width: 88%;
+    gap: 2.2rem 2rem;
   }
-  .game-card {
-    flex: 0 0 calc(50% - 30px);
+  
+  .section-title {
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+    margin-top: 3.5rem;
+  }
+  
+  .page-title {
+    font-size: 1.7rem;
+    margin-top: 2.5rem;
+  }
+  
+  .page-description {
+    margin-bottom: 3rem;
   }
 }
 
-@media (max-width: 799px) {
-  .game-grid {
-    gap: 20px;
-  }
-  .game-card {
-    flex: 0 0 calc(100% - 20px);
-    margin: 15px 0;
-  }
-}
-
-/* Mobile responsive layout - this works with style.css media queries */
 @media (max-width: 768px) {
-  /* Games will stack in a single column on mobile */
-  #board-games .section-content {
-    padding-top: 1em;
+  .game-grid {
+    gap: 1.8rem;
+    width: 90%;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+    margin-top: 3rem;
+    margin-bottom: 1.8rem;
+  }
+  
+  .page-title {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+  .page-description {
+    font-size: 0.9rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .game-title {
+    font-size: 0.95rem;
+  }
+  
+  .section {
+    margin-bottom: 3.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .game-grid {
+    grid-template-columns: 1fr;
+    max-width: 380px;
+    gap: 2.2rem;
+  }
+  
+  .game-card {
+    aspect-ratio: 1 / 1;
+  }
+  
+  .page-title {
+    font-size: 1.4rem;
+    margin-top: 1.8rem;
+  }
+  
+  .section {
+    margin-bottom: 3rem;
+  }
+  
+  .section-title {
+    margin-top: 2.5rem;
   }
 }

@@ -1,0 +1,191 @@
+/* Import all required fonts centrally */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600&display=swap');
+
+/* ====================================
+   Global CSS - Common styles across all pages
+==================================== */
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --personal-color: rgb(51, 107, 183);
+  --bg-color: #ffffff;
+  --text-color: #333333;
+  --accent-color: #4a6fa5;
+  --link-color: #2a2a2a;
+  --separator-color: #e0e0e0;
+  --subtitle-color: #4a4a4a;
+  --line-height: 1.6rem;
+  --section-spacing: 3rem;
+  --content-spacing: 1.2rem;
+  --standard-padding: 40px;
+}
+
+html {
+  overflow-y: scroll;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Lato', sans-serif;
+  line-height: var(--line-height);
+  margin: 0 auto;
+  padding: var(--standard-padding);
+  max-width: 1000px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 400;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 300;
+  color: #222;
+  margin-top: 0;
+}
+
+h1 {
+  font-weight: 400;
+  font-size: 2rem; /* Reduced size as requested */
+  letter-spacing: 0.5px;
+  font-family: 'Lato', sans-serif;
+  margin: 2rem 0 1.5rem;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+/* Links */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+a:visited {
+  color: inherit;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Navigation */
+header {
+  margin-bottom: 2rem;
+}
+
+.header-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--separator-color);
+  margin-bottom: 20px;
+}
+
+.header-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 15px;
+}
+
+/* Style shared by both nav links and language toggle */
+.header-nav li a,
+.language-switch-btn {
+  font-size: 16px;
+  text-decoration: none;
+  color: var(--link-color);
+  font-weight: bold;
+  text-transform: capitalize;
+  position: relative;
+  padding-bottom: 5px;
+  font-family: 'Lato', sans-serif;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 5px 0;
+}
+
+.header-nav li a:hover,
+.language-switch-btn:hover {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+.header-nav li a::after,
+.language-switch-btn::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--personal-color);
+  transition: width 0.3s ease;
+}
+
+.header-nav li a:hover::after,
+.language-switch-btn:hover::after {
+  width: 100%;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--subtitle-color);
+  margin-top: 30px;
+  padding: 15px 0;
+  /* No divider for footer as requested */
+}
+
+.last-updated {
+  display: inline-block;
+  font-size: 0.85rem;
+  color: var(--subtitle-color);
+  margin-left: 15px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body {
+    padding: 25px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .header-nav ul {
+    gap: 15px;
+  }
+}
+
+/* Mobile responsive navigation */
+@media (max-width: 480px) {
+  .header-nav ul {
+    gap: 8px;
+  }
+  
+  .header-nav li a,
+  .language-switch-btn {
+    font-size: 13px;
+    padding: 4px 2px;
+  }
+  
+  .header-nav {
+    flex-wrap: nowrap;
+  }
+}

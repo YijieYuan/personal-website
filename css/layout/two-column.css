@@ -1,0 +1,46 @@
+/* ====================================
+   Two-Column Layout for Sections
+==================================== */
+
+/* Two column layout for desktop */
+.section {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    column-gap: 2.5rem;
+    align-items: start;
+    margin-bottom: var(--section-spacing);
+  }
+  
+  /* Section title styles */
+  .section-title {
+    font-weight: bold;
+    color: var(--accent-color);
+    font-size: 1.2rem;
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+  
+  /* Ensure section content does not have extra top margin */
+  .section-content {
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Responsive layout for mobile devices */
+  @media (max-width: 768px) {
+    .section {
+      display: block;
+      margin-bottom: 2.5rem;
+    }
+    
+    .section-title {
+      margin-bottom: 1rem;
+      display: block;
+      font-size: 1.1rem;
+    }
+    
+    .section-content {
+      margin-top: 1rem;
+    }
+  }

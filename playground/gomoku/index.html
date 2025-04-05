@@ -6,25 +6,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <title>Gomoku - Five in a Row</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Use global stylesheets -->
-    <link rel="stylesheet" href="../../style.css">
-    <link rel="stylesheet" href="../../navbar.css">
+    <!-- Base CSS files -->
+    <link rel="stylesheet" href="../../css/normalize.css" />
+    <link rel="stylesheet" href="../../css/style.css" />
     <link rel="stylesheet" href="gomoku.css">
-    
-    <script src="../../script.js" defer></script>
 </head>
 <body>
     <header>
         <nav class="header-nav">
             <ul>
-                <li><a href="../../">home</a></li>
-                <li><a href="../../projects/">projects</a></li>
-                <li><a href="../">playground</a></li>
-                <li><a href="../../cv/">cv</a></li>
+                <li><a href="../../">Home</a></li>
+                <li><a href="../../projects/">Projects</a></li>
+                <li><a href="../">Playground</a></li>
+                <li><a href="../../cv/">CV</a></li>
             </ul>
         </nav>
     </header>
@@ -34,14 +29,20 @@
     <div class="game-wrapper">
         <div class="game-container">
             <div id="board"></div>
-            <div class="controls">
-                <button id="startBtn">Restart</button>
-                <button id="toggleAiAnalysisBtn" class="toggle-btn">Disable AI</button>
-                <button id="toggleVisualHintBtn" class="toggle-btn">Hide Visual Hints</button>
-                <button id="undoBtn">Undo</button>
-                <button id="makeMoveBtn">AI Move</button>
-                <button id="autoBlackBtn" class="auto-play-btn">Auto Black</button>
-                <button id="autoWhiteBtn" class="auto-play-btn">Auto White</button>
+            <div class="controls-container">
+                <div class="controls-group main-controls">
+                    <button id="startBtn" class="control-btn primary-btn">Restart</button>
+                    <button id="undoBtn" class="control-btn">Undo</button>
+                    <button id="makeMoveBtn" class="control-btn">AI Move</button>
+                </div>
+                <div class="controls-group toggle-controls">
+                    <button id="toggleAiAnalysisBtn" class="toggle-btn">Disable AI</button>
+                    <button id="toggleVisualHintBtn" class="toggle-btn">Hide Hints</button>
+                </div>
+                <div class="controls-group auto-controls">
+                    <button id="autoBlackBtn" class="auto-play-btn">Auto Black</button>
+                    <button id="autoWhiteBtn" class="auto-play-btn">Auto White</button>
+                </div>
             </div>
         </div>
 
@@ -64,7 +65,7 @@
     </div>
 
     <footer>
-        &copy; Yijie Yuan.
+        &copy; Yijie Yuan. </span>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

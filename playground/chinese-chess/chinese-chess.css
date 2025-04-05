@@ -1,17 +1,17 @@
-/* Chinese Chess CSS - Revised UI */
+/* Chinese Chess CSS - Improved UI */
 
-/* Main layout - adjusted to position board more to left */
+/* Main layout */
 .game-wrapper {
   display: flex;
   justify-content: flex-start;
   gap: 20px;
   margin: 20px auto;
   max-width: 950px;
-  padding: 0 15px;
+  padding: 0 25px;
 }
 
 .game-container {
-  width: 500px; /* Increased from 450px */
+  width: 500px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -20,53 +20,26 @@
 }
 
 .info-section {
-  width: 300px;
+  width: 350px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.header-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #cccccc;
-}
-
-.header-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  gap: 15px;
-}
-
-.header-nav li a {
-  font-size: 16px;
-  text-decoration: none;
-  color: #2a2a2a;
-  font-weight: bold;
-}
-
-.header-nav a:hover {
-  text-decoration: underline;
-}
-
-/* Board styles - with proper proportions and alignment */
+/* Board styles - with proper Xiangqi proportions */
 .board {
   width: 500px;
-  height: 546px; /* Adjusted to match proper Xiangqi board proportions (10:11) */
+  height: 541px; /* Return to proper Xiangqi board proportions (10:11) */
   position: relative;
   border: 2px solid #222;
-  box-sizing: content-box; /* Changed to content-box so border doesn't affect dimensions */
+  box-sizing: content-box; /* Border doesn't affect dimensions */
   padding: 0;
   margin: 0;
   background-color: transparent;
   background: url(game/images/boards/board-ccbridge.png) no-repeat;
   background-position: center;
-  background-size: 100% 100%;
+  background-size: 100% 100%; /* Ensure image fills the space */
   margin-bottom: 10px;
 }
 
@@ -82,19 +55,21 @@
 
 /* Ensure perfect piece centering */
 .board img {
-  width: 44px; /* Adjusted for better fit */
+  width: 44px; /* Back to original size for proper board proportions */
   height: 44px;
   max-width: 44px;
   max-height: 44px;
   object-fit: contain;
   display: block;
   margin: 4px auto; /* Center pieces in cells */
+  transition: transform 0.3s ease; /* Smooth rotation */
+  transform-origin: center; /* Ensure rotation from center point */
 }
 
-/* Make cells exact size */
+/* Make cells exact size for proper board proportions */
 .board td {
-  width: 54px; /* Match CELL_WIDTH constant */
-  height: 54px; /* Match CELL_HEIGHT constant */
+  width: 54px; /* Match CELL_WIDTH constant in xiangqi.js */
+  height: 54px; /* Match CELL_HEIGHT constant in xiangqi.js */
   padding: 0;
   margin: 0;
   text-align: center;
@@ -119,10 +94,14 @@
   box-sizing: border-box; /* Include padding in width calculation */
 }
 
+.main-controls {
+  margin-bottom: 5px;
+}
+
 .controls button {
-  background: #4a76a8;
+  background: var(--accent-color);
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: white;
   font-size: 14px;
   padding: 8px 14px;
@@ -133,7 +112,7 @@
 }
 
 .controls button:hover {
-  background: #3a6594;
+  opacity: 0.9;
 }
 
 /* Autoplay button style when active */
@@ -143,13 +122,13 @@
 
 /* Autoplay status */
 .autoplay-status {
-  margin-top: 10px;
+  margin-top: 5px;
   font-size: 14px;
-  color: #555;
+  color: var(--subtitle-color);
   text-align: center;
   padding: 8px;
   background: #f0f4f8;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 #autoplayStatus.red {
@@ -162,30 +141,30 @@
   color: #000000;
 }
 
-/* Redesigned level selector with pills - fixed width */
+/* Redesigned level selector with pills */
 .level-selector {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
   background: #f0f4f8;
-  border-radius: 4px;
+  border-radius: 6px;
   width: 100%;
-  box-sizing: border-box; /* Include padding in width calculation */
-  max-width: 500px; /* Match board width */
+  box-sizing: border-box;
+  max-width: 500px;
 }
 
 .level-label {
   font-size: 14px;
   font-weight: bold;
-  color: #333;
-  min-width: 45px;
+  color: var(--text-color);
+  min-width: 70px;
 }
 
 .level-pills {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap; /* Allow wrapping if needed */
+  flex-wrap: wrap;
 }
 
 .level-pill {
@@ -195,7 +174,7 @@
   line-height: 24px;
   text-align: center;
   background: white;
-  border: 1px solid #ccc;
+  border: 1px solid var(--separator-color);
   border-radius: 12px;
   font-size: 14px;
   cursor: pointer;
@@ -203,28 +182,28 @@
 }
 
 .level-pill:hover {
-  border-color: #4a76a8;
+  border-color: var(--accent-color);
   background: #f6f9fc;
 }
 
 .level-pill.active {
-  background: #4a76a8;
+  background: var(--accent-color);
   color: white;
-  border-color: #4a76a8;
+  border-color: var(--accent-color);
 }
 
 /* Game sections */
 .game-status, .ai-section, .move-history {
   background: white;
   padding: 15px;
-  border-radius: 6px;
+  border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 /* Game status */
 .status-text {
   font-size: 14px;
-  color: #333;
+  color: var(--text-color);
   font-weight: 500;
   padding: 6px 0;
 }
@@ -233,7 +212,7 @@
 .ai-suggestion {
   background: #f8f9fa;
   padding: 12px;
-  border-radius: 4px;
+  border-radius: 6px;
   margin-top: 8px;
   font-size: 14px;
   min-height: 60px;
@@ -241,7 +220,7 @@
 }
 
 .current-eval {
-  color: #555;
+  color: var(--subtitle-color);
   font-style: italic;
   margin-top: 8px;
   display: block;
@@ -250,12 +229,13 @@
 
 /* Move history */
 .history-text {
+  font-family: 'Source Code Pro', monospace;
   font-size: 13px;
   line-height: 1.5;
   background: #f8f9fa;
   padding: 12px;
-  border-radius: 4px;
-  height: 220px; /* Increased height */
+  border-radius: 6px;
+  height: 220px;
   overflow-y: auto;
   white-space: pre-wrap;
 }
@@ -263,9 +243,10 @@
 /* Game-specific headings */
 .info-section h2 {
   font-weight: bold;
-  color: #4a76a8;
+  color: var(--accent-color);
   font-size: 16px;
   margin-bottom: 10px;
+  margin-top: 0;
 }
 
 /* Move indicator styling */
@@ -281,7 +262,6 @@
   z-index: 5;
   pointer-events: none; /* Allow clicking through */
 }
-
 
 /* Additional styles for status indication */
 .status-red {
@@ -331,8 +311,6 @@
   }
 }
 
-/* Last moved piece effect removed */
-
 /* Media queries for responsiveness */
 @media (max-width: 900px) {
   .game-wrapper {
@@ -350,8 +328,7 @@
   .board {
     width: 100%;
     height: auto;
-    /* Maintain square aspect ratio */
-    aspect-ratio: 1;
+    aspect-ratio: 10/11; /* Maintain proper Xiangqi board proportions */
     max-height: 90vh;
   }
   
@@ -388,19 +365,19 @@
   
   /* Ensure pieces scale with board */
   .board img {
-    width: 9.6vw; /* 48px/500px * 100 = ~9.6% of viewport width */
-    height: 9.6vw;
-    max-width: 48px;
-    max-height: 48px;
+    width: 9vw; /* Adjusted for square board */
+    height: 9vw;
+    max-width: 42px;
+    max-height: 42px;
     min-width: 20px;
     min-height: 20px;
   }
   
   .board td {
-    width: 10.4vw; /* 52px/500px * 100 = ~10.4% of viewport width */
-    height: 10.4vw;
-    max-width: 52px;
-    max-height: 52px;
+    width: 10vw; /* Adjusted for square board */
+    height: 10vw;
+    max-width: 50px;
+    max-height: 50px;
     min-width: 22px;
     min-height: 22px;
   }

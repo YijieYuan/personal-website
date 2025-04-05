@@ -4,79 +4,84 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Projects - Yijie Yuan</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../style.css"/>
-  <link rel="stylesheet" href="../navbar.css"/>
-  <link rel="stylesheet" href="project.css"/>
-  <script src="../script.js" defer></script>
+  <!-- Using global CSS for fonts and layouts -->
+  <link rel="stylesheet" href="../css/normalize.css"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="../css/layout/two-column.css"/>
+  <link rel="stylesheet" href="projects.css"/>
 </head>
 <body>
-  <!-- Navigation Section -->
-  <header>
-    <nav class="header-nav">
-      <ul>
-        <li><a href="../">home</a></li>
-        <li><a href="./">projects</a></li>
-        <li><a href="../playground/">playground</a></li>
-        <li><a href="../cv/">cv</a></li>
-      </ul>
-    </nav>
-  </header>
-
-  <h1>Projects</h1>
+<!-- Navigation Section -->
+<header>
+  <nav class="header-nav">
+    <ul>
+      <li><a href="../">Home</a></li>
+      <li><a href="./">Projects</a></li>
+      <li><a href="..//playground/">Playground</a></li>
+      <li><a href="../cv/">CV</a></li>
+    </ul>
+  </nav>
+</header>
 
   <div class="content">
     <div class="section" id="projects">
         <div class="section-title">Research Projects</div>
         <div class="section-content">
-            <p>
-                <strong>
+            <!-- Project 1 -->
+            <div class="project-container">
+                <p class="project-title">
                     <a href="./research-project-1/">Project 1: Physics-Informed Deep Learning CT Image Restoration</a>
-                </strong>
-            </p>
-            <p>
-                A multi-input CNN is proposed that incorporates image quality characteristics, such as blur and noise kernels, as auxiliary inputs to enhance image restoration.
-            </p>
-            <p class="publications-title">Publications:</p>
-            <ul class="publications-list">
-                <li>
-                    Yijie Yuan, Grace J. Gang, J. Webster Stayman, 
-                    "<em>Deep learning CT image restoration using system blur and noise models</em>," 
-                    J. Med. Imag. 12(1) 014003 (3 February 2025). 
-                    <a href="https://doi.org/10.1117/1.JMI.12.1.014003" target="_blank">https://doi.org/10.1117/1.JMI.12.1.014003</a>
-                </li>
-            </ul>
+                </p>
+                <p class="project-description">
+                    A multi-input CNN is proposed that incorporates image quality characteristics, such as blur and noise kernels, as auxiliary inputs to enhance image restoration.
+                </p>
+                
+                <!-- Using native HTML details/summary for toggling -->
+                <details class="publications-details">
+                    <summary class="publications-summary">Publications <span class="publications-counter">(1)</span></summary>
+                    <ul class="publications-list">
+                        <li>
+                            Yijie Yuan, Grace J. Gang, J. Webster Stayman, 
+                            "<em>Deep learning CT image restoration using system blur and noise models</em>," 
+                            J. Med. Imag. 12(1) 014003 (3 February 2025). 
+                            <a href="https://doi.org/10.1117/1.JMI.12.1.014003" target="_blank">https://doi.org/10.1117/1.JMI.12.1.014003</a>
+                        </li>
+                    </ul>
+                </details>
+            </div>
 
-            <p>
-                <strong>
+            <!-- Project 2 -->
+            <div class="project-container">
+                <p class="project-title">
                     <a href="./research-project-2/">Project 2: Physics-Informed Deep Learning CT Radiomics Standardization</a>
-                </strong>
-            </p>
-            <p>
-                Differentiable radiomics approximation algorithms are developed for Histogram, GLCM, and GLRLM-based features, enabling end-to-end deep learning networks to restore more accurate feature representations under variable imaging conditions.
-            </p>
-            <p class="publications-title">Publications:</p>
-            <ul class="publications-list">
-                <li>
-                    Yijie Yuan, Huay Din, Grace Hyun Kim, Michael McNitt-Gray, J. Webster Stayman, Grace J. Gang, 
-                    "<em>Recovery of GLRLM Features in Degraded Images Using Deep Learning and Image Property Models</em>."
-                </li>
-                <li>
-                    Yijie Yuan, J. Webster Stayman, Grace J. Gang, 
-                    "<em>End-to-end deep learning restoration of GLCM features from blurred and noisy images</em>," 
-                    Proc. SPIE 12927, Medical Imaging 2024: Computer-Aided Diagnosis, 129271C (3 April 2024). 
-                    <a href="https://doi.org/10.1117/12.3006205" target="_blank">https://doi.org/10.1117/12.3006205</a>
-                </li>
-            </ul>
+                </p>
+                <p class="project-description">
+                    Differentiable radiomics approximation algorithms are developed for Histogram, GLCM, and GLRLM-based features, enabling end-to-end deep learning networks to restore more accurate feature representations under variable imaging conditions.
+                </p>
+                
+                <!-- Using native HTML details/summary for toggling -->
+                <details class="publications-details">
+                    <summary class="publications-summary">Publications <span class="publications-counter">(2)</span></summary>
+                    <ul class="publications-list">
+                        <li>
+                            Yijie Yuan, Huay Din, Grace Hyun Kim, Michael McNitt-Gray, J. Webster Stayman, Grace J. Gang, 
+                            "<em>Recovery of GLRLM Features in Degraded Images Using Deep Learning and Image Property Models</em>."
+                        </li>
+                        <li>
+                            Yijie Yuan, J. Webster Stayman, Grace J. Gang, 
+                            "<em>End-to-end deep learning restoration of GLCM features from blurred and noisy images</em>," 
+                            Proc. SPIE 12927, Medical Imaging 2024: Computer-Aided Diagnosis, 129271C (3 April 2024). 
+                            <a href="https://doi.org/10.1117/12.3006205" target="_blank">https://doi.org/10.1117/12.3006205</a>
+                        </li>
+                    </ul>
+                </details>
+            </div>
         </div>
     </div>
   </div>
 
-  <div class="divider"></div>
   <footer>
-    &copy; Yijie Yuan. <span class="last-updated">Last Updated: <span id="update-date"></span></span>
+    &copy; Yijie Yuan. <span class="last-updated">Last Updated: April 2025</span>
   </footer>
 </body>
 </html>

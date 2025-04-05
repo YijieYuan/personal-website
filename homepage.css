@@ -1,0 +1,233 @@
+/* ====================================
+   Homepage-specific styles
+==================================== */
+
+:root {
+  /* Button Background Colors */
+  --github-bg-color: #24292e;     /* GitHub black */
+  --scholar-bg-color: white;      /* Google Scholar white background */
+  --linkedin-bg-color: #0077b5;   /* LinkedIn blue */
+  --kaggle-bg-color: #32C0FE;     /* Kaggle updated blue */
+  
+  /* Button Text Colors */
+  --github-text-color: white;     /* White text on black background */
+  --scholar-text-color: black;    /* Black text on white background */
+  --linkedin-text-color: white;   /* White text on blue background */
+  --kaggle-text-color: white;     /* White text on Kaggle blue background */
+}
+
+/* About Me Section */
+.about-me img {
+  float: right;
+  margin-left: 30px;
+  margin-bottom: 15px;
+  max-height: 200px;
+  width: auto;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Education & Experience */
+.education-item, .experience-item {
+  margin-bottom: 1.5rem;
+}
+
+.education-item:last-child, .experience-item:last-child {
+  margin-bottom: 0;
+}
+
+.degree, .job-title {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+  display: block;
+  font-size: 1.05rem;
+}
+
+.institution, .job-location {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.job-duration {
+  font-size: 0.95rem;
+  color: var(--subtitle-color);
+  display: block;
+}
+
+/* Career Links Section */
+.career-links-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* Button styles */
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  margin-bottom: 5px;
+  transform: translateY(0);
+  text-align: center;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Customizable button colors */
+#github-btn {
+  background-color: var(--github-bg-color);
+  color: var(--github-text-color);
+}
+
+#scholar-btn {
+  background-color: var(--scholar-bg-color);
+  color: var(--scholar-text-color);
+  border: 1px solid #e0e0e0;  /* Light gray border for the white button */
+}
+
+#linkedin-btn {
+  background-color: var(--linkedin-bg-color);
+  color: var(--linkedin-text-color);
+}
+
+#kaggle-btn {
+  background-color: var(--kaggle-bg-color);
+  color: var(--kaggle-text-color);
+}
+
+/* Contact Section - More Compact Layout */
+.section.contact {
+  background-color: #f8f9fa;             
+  border-radius: 8px;                    
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-left: calc(-1 * var(--standard-padding) / 2);
+  margin-right: calc(-1 * var(--standard-padding) / 2);
+  margin-bottom: 1.5rem;
+  padding: 25px 30px;
+}
+
+/* Grid layout for contact information */
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.contact-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Email styling */
+.email-item {
+  margin-bottom: 5px;
+}
+
+.email-label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 3px;
+  font-size: 0.9rem;
+  color: var(--accent-color);
+}
+
+.contact-email {
+  font-size: 0.95rem;
+}
+
+/* Social Media styling */
+.social-media-section {
+  grid-column: 1 / -1;
+  margin-top: 15px;
+  border-top: 1px solid #eaeaea;
+  padding-top: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.social-media-label {
+  font-weight: bold;
+  display: inline-block;
+  margin-right: 15px;
+  font-size: 0.9rem;
+  color: var(--accent-color);
+}
+
+.social-media-icons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.social-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.social-icon-link:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.social-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .about-me img {
+    float: none;
+    display: block;
+    margin: 0 auto 20px auto;
+    max-width: 80%;
+  }
+  
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .social-media-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .social-media-label {
+    margin-bottom: 10px;
+    margin-right: 0;
+  }
+  
+  .career-links-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+}

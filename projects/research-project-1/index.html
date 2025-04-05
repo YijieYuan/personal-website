@@ -3,53 +3,54 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Physics Informed Image Restoration</title>
-  <!-- Keep these preconnects -->
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <!-- Font imports -->
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&family=Lora:ital,wght@0,400;0,700;1,400;1,700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet"/>
-  <!-- Existing CSS links -->
-  <link rel="stylesheet" href="../../style.css"/>
-  <link rel="stylesheet" href="../../navbar.css"/>
-  <!-- Academic markdown styling (removing article.css) -->
-  <link rel="stylesheet" href="../../projects/markdown.css"/>
-  <link rel="stylesheet" href="../../projects/code-highlighting.css"/>
-  <link rel="stylesheet" href="../../projects/math-style.css"/>
-  <script src="../../script.js" defer></script>
-
+  <title>Physics Informed Image Restoration - Yijie Yuan</title>
+  <!-- CSS file structure -->
+  <link rel="stylesheet" href="../../css/normalize.css"/>
+  <link rel="stylesheet" href="../../css/style.css"/>
+  <link rel="stylesheet" href="../../css/layout/two-column.css"/>
+  <!-- Academic markdown styling -->
+  <link rel="stylesheet" href="../markdown.css"/>
+  <link rel="stylesheet" href="../code-highlighting.css"/>
+  <link rel="stylesheet" href="../math-style.css"/>
 </head>
 <body>
   <header>
     <nav class="header-nav">
       <ul>
-        <li><a href="../../">home</a></li>
-        <li><a href="../">projects</a></li>
-        <li><a href="../../playground/">playground</a></li>
-        <li><a href="../../cv/">cv</a></li>
+        <li><a href="../../">Home</a></li>
+        <li><a href="../">Projects</a></li>
+        <li><a href="../../playground/">Playground</a></li>
+        <li><a href="../../cv/">CV</a></li>
       </ul>
     </nav>
   </header>
+  
   <div class="post">
     <header class="post-header">
       <h1 class="post-title">Physics Informed Image Restoration</h1>
       <p class="post-meta">Date: February 3, 2025 | Author: Yijie Yuan</p>
     </header>
+    
     <div class="post-content">
       <p>Most deep learning image restoration approaches rely on blind deconvolution without access to the forward model. In medical imaging, such as CT, these characteristics can often be measured or predicted, offering valuable information that has the potential to enhance performance.
         One strategy combines deep learning with known image quality models through model-based deconvolution with a deep learning prior. However, the direct one-step method, which uses blur and noise kernels as inputs to an end-to-end NN, remains challenging. In this work, we introduce a multi-input CNN variant that leverages image quality characteristics, such as blur and noise kernels, as auxiliary inputs to improve restoration performance. While one might assume that a general network structure with conditional inputs could address this issue, we found that it was not the case...</p>
+      
       <h2>Background</h2>
       <p>Image restoration is a crucial task in medical imaging to recover lost details in images affected by noise and blur.</p>
+      
       <h2>Methods</h2>
       <p>Our approach uses a deep CNN that incorporates physics-based priors to improve restoration fidelity.</p>
+      
       <h2>Results</h2>
       <p>The model significantly outperforms traditional methods in PSNR and SSIM scores.</p>
+      
       <h2>Conclusion</h2>
       <p>Physics-informed deep learning can enhance medical image restoration accuracy.</p>
     </div>
   </div>
+
   <footer>
-    &copy; Yijie Yuan.
+    &copy; Yijie Yuan. <span class="last-updated">Last Updated: April 2025</span>
   </footer>
 </body>
 </html>

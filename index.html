@@ -6,9 +6,11 @@
   <title>Yijie Yuan</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="navbar.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="./css/normalize.css"/>
+  <link rel="stylesheet" href="./css/style.css"/>
+  <link rel="stylesheet" href="./css/layout/two-column.css"/>
+  <link rel="stylesheet" href="./homepage.css"/>
   <script src="script.js" defer></script>
 </head>
 <body>
@@ -16,10 +18,10 @@
   <header>
     <nav class="header-nav">
       <ul>
-        <li><a href="./">home</a></li>
-        <li><a href="./projects/">projects</a></li>
-        <li><a href="./playground/">playground</a></li>
-        <li><a href="./cv/">cv</a></li>
+        <li><a href="./">Home</a></li>
+        <li><a href="./projects/">Projects</a></li>
+        <li><a href="./playground/">Playground</a></li>
+        <li><a href="./cv/">CV</a></li>
       </ul>
     </nav>
   </header>
@@ -31,7 +33,7 @@
     <div class="section" id="about-me">
       <div class="section-title">About Me</div>
       <div class="section-content about-me">
-        <img src="profile.jpg" alt="Yijie Yuan" />
+        <img src="pics/profile.jpg" alt="Yijie Yuan" />
         <p>
           I am a PhD candidate in biomedical engineering at Johns Hopkins University, 
           with a passion for medical imaging and AI applications in healthcare. 
@@ -47,18 +49,18 @@
     <div class="section" id="education">
       <div class="section-title">Education</div>
       <div class="section-content">
-        <p>
-          <strong>Ph.D., Biomedical Engineering</strong><br>
-          Johns Hopkins University, Baltimore, MD, USA
-        </p>
-        <p>
-          <strong>M.S. (2021), Medical Physics</strong><br>
-          Duke University, Durham, NC, USA
-        </p>
-        <p>
-          <strong>B.S. (2019), Physics</strong><br>
-          Peking University, Beijing, China
-        </p>
+        <div class="education-item">
+          <div class="degree">Ph.D., Biomedical Engineering</div>
+          <div class="institution">Johns Hopkins University, Baltimore, MD, USA</div>
+        </div>
+        <div class="education-item">
+          <div class="degree">M.S. (2021), Medical Physics</div>
+          <div class="institution">Duke University, Durham, NC, USA</div>
+        </div>
+        <div class="education-item">
+          <div class="degree">B.S. (2019), Physics</div>
+          <div class="institution">Peking University, Beijing, China</div>
+        </div>
       </div>
     </div>
 
@@ -66,58 +68,75 @@
     <div class="section" id="experience">
       <div class="section-title">Experience</div>
       <div class="section-content">
-        <p>
-          <span class="job-title">(Upcoming) Medical Imaging Intern</span><br />
-          Intuitive, Sunnyvale, California, United States (On-site)<br />
-          <span class="job-duration">June 2025 - Sept 2025</span>
-        </p>
+        <div class="experience-item">
+          <div class="job-title">(Upcoming) Medical Imaging Intern</div>
+          <div class="job-location">Intuitive, Sunnyvale, California, United States (On-site)</div>
+          <div class="job-duration">June 2025 - Sept 2025</div>
+        </div>
       </div>
     </div>
 
-    <!-- Contact Section -->
-    <div class="section contact" id="contact">
-      <div class="section-title">Contact &gt;</div>
+    <!-- Career Section -->
+    <div class="section" id="career">
+      <div class="section-title">Career</div>
       <div class="section-content">
+        <div class="career-links-container">
+          <a href="https://github.com/YijieYuan" target="_blank" class="btn" id="github-btn">GitHub</a>
+          <a href="https://scholar.google.com/citations?user=NJR_Z-gAAAAJ&hl=en" 
+            target="_blank" class="btn" id="scholar-btn">Google Scholar</a>
+          <a href="https://www.linkedin.com/in/yijie-yuan-536818201/" target="_blank" class="btn" id="linkedin-btn">LinkedIn</a>
+          <a href="https://www.kaggle.com/yijiey" target="_blank" class="btn" id="kaggle-btn">Kaggle</a>
+        </div>
+      </div>
+    </div>
 
-        <!-- Email Subsection -->
-        <div class="email-subsection">
-          <div class="contact-info-row">
-            <div>
+    <!-- Contact Section - More Compact Layout -->
+    <div class="section contact" id="contact">
+      <div class="section-title">Contact</div>
+      <div class="section-content">
+        
+        <div class="contact-grid">
+          <!-- First Column: Working Email -->
+          <div class="contact-column">
+            <div class="email-item">
               <span class="email-label">Working Email</span>
               <span class="contact-email">yyuan57@jhu.edu</span>
             </div>
-            <div>
+          </div>
+          
+          <!-- Second Column: Personal Email -->
+          <div class="contact-column">
+            <div class="email-item">
               <span class="email-label">Personal Email</span>
               <span class="contact-email">gyijie.yuan@gmail.com</span>
             </div>
           </div>
-        </div>
-
-        <!-- Career Subsection -->
-        <div class="career-subsection">
-          <p><span class="contact-label">Career</span></p>
-          <div class="contact-buttons">
-            <a href="https://github.com/YijieYuan" target="_blank" class="btn">GitHub</a>
-            <a href="https://scholar.google.com/citations?user=NJR_Z-gAAAAJ&hl=en" 
-               target="_blank" class="btn">Google Scholar</a>
-            <a href="https://www.linkedin.com/in/yijie-yuan-536818201/" target="_blank" class="btn">LinkedIn</a>
+          
+          <!-- Social Media Section (Full Width) -->
+          <div class="social-media-section">
+            <span class="social-media-label">Social Media</span>
+            <div class="social-media-icons">
+              <a href="https://www.instagram.com/" target="_blank" class="social-icon-link">
+                <img src="pics/instagram.svg" alt="Instagram Icon" class="social-icon"/>
+              </a>
+              <!-- Placeholder for other social media icons -->
+              <!-- Example:
+              <a href="https://twitter.com/" target="_blank" class="social-icon-link">
+                <img src="pics/twitter.svg" alt="Twitter Icon" class="social-icon"/>
+              </a>
+              <a href="https://facebook.com/" target="_blank" class="social-icon-link">
+                <img src="pics/facebook.svg" alt="Facebook Icon" class="social-icon"/>
+              </a>
+              -->
+            </div>
           </div>
         </div>
-
-        <!-- Social Media with Instagram icon -->
-        <div class="social-media-subsection">
-          <p><span class="contact-label">Social Media</span></p>
-          <a href="https://www.instagram.com/" target="_blank" class="instagram-icon-link">
-            <img src="insgram.svg" alt="Instagram Icon" class="instagram-icon"/>
-          </a>
-        </div>
+        
       </div>
     </div>
-  </div>
 
-  <div class="divider"></div>
   <footer>
-    &copy; Yijie Yuan. <span class="last-updated">Last Updated: <span id="update-date"></span></span>
+    &copy; Yijie Yuan. <span class="last-updated">Last Updated: <span id="update-date">April 2025</span></span>
   </footer>
 </body>
 </html>

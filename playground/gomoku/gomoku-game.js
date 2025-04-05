@@ -787,7 +787,7 @@ window.onload = function() {
         whiteAiCancelCount = 0;
         
         // Reset toggleable options to default
-        showVisualSuggestion = true;
+        showVisualSuggestion = false;
         useAiAnalysis = true;
         updateToggleVisualHintButton();
         updateToggleAiAnalysisButton();

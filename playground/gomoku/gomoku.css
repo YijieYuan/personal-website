@@ -1,58 +1,10 @@
-body {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: 'Source Code Pro', monospace;
-    line-height: 1.5rem;
-    background-color: #ffffff;
-    color: #000000;
-    font-size: 14px;
-}
-
-h1 {
-    margin: 20px 0;
-    /* Not centered */
-}
+/* Enhanced Gomoku Game Styles */
 
 /* Board disabled state (when AI is thinking) */
 #board.disabled {
     cursor: not-allowed;
     opacity: 0.8;
-    pointer-events: none; /* Completely disable interactions */
-}
-
-/* Header Navigation - Updated to match the reference*/
-.header-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid #cccccc;
-}
-
-.header-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    gap: 15px;
-}
-
-.header-nav li a {
-    font-size: 16px;
-    text-decoration: none;
-    color: #2a2a2a;
-    font-weight: bold;
-}
-
-.header-nav a:hover {
-    text-decoration: underline;
-}
-
-.last-updated {
-    font-size: 14px;
-    color: #4a4a4a;
-    margin-left: auto;
+    pointer-events: none;
 }
 
 /* Game wrapper and containers */
@@ -69,22 +21,28 @@ h1 {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
 }
 
-/* Board Styling */
-/* Updated code */
+/* Enhanced Board Styling */
 #board {
     width: 560px;
     height: 560px;
     margin: 0;
     position: relative;
-    background-color: #e9bb7d;
-    /* Border removed - relying on SVG grid lines instead */
+    background-color: #e5c38d; /* Warmer, more refined wood color */
+    background-image: linear-gradient(rgba(255, 220, 150, 0.05) 1px, transparent 1px), 
+                      linear-gradient(90deg, rgba(255, 220, 150, 0.05) 1px, transparent 1px),
+                      radial-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0));
+    background-size: 20px 20px, 20px 20px, 100% 100%;
+    background-position: center center;
     overflow: visible;
     margin-left: 22px;
     margin-bottom: 22px;
     box-sizing: content-box;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    border: 1px solid rgba(154, 106, 57, 0.6);
 }
 
 .board-grid {
@@ -94,15 +52,17 @@ h1 {
     width: 100%;
     height: 100%;
     pointer-events: none;
+    stroke: rgba(0, 0, 0, 0.7);
+    stroke-width: 1px;
 }
 
-/* Board labels - ensure all are visible */
+/* Board labels with improved styling */
 .board-label {
     position: absolute;
     font-size: 13px;
-    color: #000;
+    color: rgba(0, 0, 0, 0.75);
     pointer-events: none;
-    font-weight: bold;
+    font-weight: 600;
     z-index: 20;
     text-align: center;
     width: 18px;
@@ -118,146 +78,192 @@ h1 {
     transform: translateX(-50%);
 }
 
-/* Improved go-place positioning */
+/* Stone positioning */
 .go-place {
     position: absolute;
     z-index: 10;
     cursor: pointer;
     box-sizing: border-box;
-    /* Stone positioning is now handled from JavaScript */
     display: flex;
     justify-content: center;
     align-items: center;
+    transition: transform 0.15s ease-out;
 }
 
-/* Improved stone styling - centered within cells */
+.go-place:hover {
+    transform: scale(1.05);
+}
+
+/* Enhanced stone styling with 3D effect */
 .go {
     position: absolute;
-    width: 80%;
-    height: 80%;
+    width: 82%;
+    height: 82%;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     border-radius: 50%;
     background-color: transparent;
-    transition: background-color 0.2s;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-sizing: border-box;
 }
 
 .go-place.set .go {
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* Stone styles */
+/* Enhanced stone colors with subtle gradients */
 .go-place.black .go {
-    background-color: #333;
+    background: radial-gradient(circle at 35% 35%, #444, #111);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .go-place.white .go {
-    background-color: #fff;
-    border: 1px solid #ccc;
+    background: radial-gradient(circle at 35% 35%, #fff, #f0f0f0);
+    border: 1px solid #ddd;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
-/* Last move highlight style - dashed pink border */
-.go-place.last-move {
-    border: 3px dashed #ff639f;
-    z-index: 4;
-}
-
-/* AI suggestion style - dashed blue border with transparent background and square corners */
+/* Fix for visual hints misalignment in small windows */
+.go-place.last-move,
 .go-place.ai-suggestion {
-    border: 3px dashed #7482ff;
-    z-index: 3;
-    background-color: transparent;
-    border-radius: 0;
+    position: absolute;
+    box-sizing: border-box;
+    /* Make sure border doesn't throw off alignment */
+    border-width: 2px;
+    /* Ensure indicators are perfectly centered within grid cells */
+    transform: translate(0, 0);
+    /* Use inset rather than border to avoid size changes */
+    border: none;
+    outline: 2px dashed transparent;
+    outline-offset: -2px;
 }
 
-/* Star points (dark dots) - properly centered */
+.go-place.last-move {
+    outline-color: var(--accent-color);
+    z-index: 4;
+    animation: pulse 2s infinite;
+}
+
+.go-place.ai-suggestion {
+    outline-color: rgba(116, 130, 255, 0.8);
+    z-index: 3;
+}
+
+@keyframes pulse {
+    0% { outline-color: rgba(74, 118, 168, 0.6); }
+    50% { outline-color: rgba(74, 118, 168, 1); }
+    100% { outline-color: rgba(74, 118, 168, 0.6); }
+}
+
+/* Star points with enhanced styling */
 .go-darkdot::after {
     content: '';
     position: absolute;
     width: 8px;
     height: 8px;
-    background-color: #333;
+    background-color: rgba(0, 0, 0, 0.7);
     border-radius: 50%;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     pointer-events: none;
     z-index: 1;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
 }
 
-/* Hide the star point when a stone is placed on it */
+/* Hide star point when stone placed */
 .go-place.set.go-darkdot::after {
     display: none;
 }
 
-/* Controls - position aligned with board edge and very close to board */
-.controls {
+/* Fix for uneven button layout - standardized grid */
+.controls-container {
     display: flex;
-    gap: 8px;
-    width: 560px; /* Same as board width */
-    justify-content: flex-start; /* Align to left */
-    margin-top: 0px; /* No gap between board and buttons */
-    margin-left: 22px; /* Match the board's left margin (for the labels) */
-    flex-wrap: wrap; /* Allow wrapping for better display */
+    flex-direction: column;
+    gap: 10px;
+    width: 560px;
+    margin-left: 22px;
 }
 
-.controls button {
-    background: #4a76a8;
+/* Control button groups with equal buttons per row */
+.controls-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+}
+
+/* Make specific controls span full width when needed */
+.main-controls {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.toggle-controls {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.auto-controls {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* Ensure buttons have consistent sizing */
+.control-btn, .toggle-btn, .auto-play-btn {
+    background: var(--accent-color);
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     color: white;
     cursor: pointer;
     font-family: inherit;
     font-size: 14px;
-    padding: 8px 6px; /* Reduced horizontal padding */
-    transition: all 0.2s;
-    min-width: 70px;
-    flex: 1; /* Allow buttons to grow evenly */
-    max-width: 110px; /* Prevent buttons from getting too wide */
-    margin-bottom: 4px; /* Add small bottom margin for wrapping */
+    padding: 10px 14px;
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: center;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.controls button:hover {
-    opacity: 0.9;
+.control-btn:hover, .toggle-btn:hover, .auto-play-btn:hover {
+    background: var(--personal-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Auto play buttons styling */
-.auto-play-btn {
-    background: #4a76a8;
+/* Primary button style */
+.primary-btn {
+    background: #2e7d32;
+    font-weight: 600;
 }
 
-.auto-play-btn.active {
-    background: #c43e3e; /* Red color for stop button */
+.primary-btn:hover {
+    background: #1b5e20;
 }
 
-/* Toggle button styling */
-.toggle-btn {
-    background: #4a76a8;
-}
-
+/* Toggle button states */
 .toggle-btn.active {
-    background: #8B4513; /* Brown color to indicate disabled state */
-}
-
-/* Disable AI toggle button - green for enabled, red for disabled */
-#toggleAiAnalysisBtn {
-    background: #4a76a8;
-}
-
-#toggleAiAnalysisBtn.active {
     background: #8B4513;
 }
 
-/* Disabled button */
-.controls button.disabled,
-.controls button:disabled,
-.toggle-btn.disabled,
-.toggle-btn:disabled {
+/* Auto play button states */
+.auto-play-btn.active {
+    background: #c43e3e;
+}
+
+/* Disabled button state */
+.control-btn:disabled,
+.toggle-btn:disabled,
+.auto-play-btn:disabled {
     background: #aaa;
     cursor: not-allowed;
     opacity: 0.6;
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Info Section */
@@ -266,64 +272,64 @@ h1 {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
 }
 
 .info-section h2 {
     margin: 0 0 12px 0;
     font-size: 16px;
-    color: #4a76a8;
-    font-weight: bold;
+    color: var(--accent-color);
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 8px;
 }
 
-.info-section h3 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    color: #333;
+.info-section h2::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 40px;
+    height: 2px;
+    background-color: rgba(74, 118, 168, 0.4);
 }
 
-/* Game Status */
-.game-status {
+/* Game Status with enhanced styling */
+.game-status, .ai-section, .move-history {
     background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .status-text {
     font-size: 14px;
     color: #333;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid var(--accent-color);
 }
 
-/* AI Section */
-.ai-section {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
+/* AI Suggestion */
 .ai-suggestion {
     background: #f8f9fa;
     padding: 12px;
     border-radius: 6px;
-    margin-bottom: 0; /* Remove bottom margin */
-    font-family: 'Source Code Pro', monospace;
+    font-family: monospace;
     font-size: 14px;
-    border-left: 4px solid #4a76a8;
+    border-left: 4px solid var(--accent-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Move History */
 .move-history {
-    background: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     flex-grow: 1;
 }
 
 .history-text {
-    font-family: 'Source Code Pro', monospace;
+    font-family: monospace;
     font-size: 14px;
     line-height: 1.5;
     background: #f8f9fa;
@@ -332,243 +338,199 @@ h1 {
     height: 180px;
     overflow-y: auto;
     white-space: pre-wrap;
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-footer {
-    text-align: center;
-    margin-top: 40px;
-    color: #666;
-    font-size: 14px;
-}
-
-/* Improved Responsive Design */
+/* Small screen optimization - show full board and panels */
 @media (max-width: 900px) {
-    body {
-        padding: 10px;
-    }
-
     .game-wrapper {
         flex-direction: column;
         align-items: center;
         gap: 20px;
+        width: 100%;
     }
 
     .game-container {
         width: 100%;
-        max-width: 560px;
+        max-width: 100%; /* Allow full width */
+        padding: 0 10px;
     }
 
+    /* Adjust board to ensure it's fully visible */
     #board {
-        width: calc(100% - 22px); /* Account for label space */
+        width: calc(100% - 40px); /* Account for margins on both sides */
         height: 0;
-        padding-bottom: calc(100% - 22px); /* Maintain square aspect ratio */
-        margin-left: 22px; /* Maintain space for labels */
-        margin-bottom: 22px; /* Maintain space for labels */
+        padding-bottom: calc(100% - 40px); /* Maintain square aspect ratio */
+        margin-left: 20px;
+        margin-right: 20px;
+        margin-bottom: 20px;
+        box-sizing: border-box;
     }
 
     .info-section {
         width: 100%;
-        max-width: 560px;
+        max-width: 100%;
+        padding: 0 10px;
     }
     
-    .controls {
-        width: calc(100% - 22px);
-        margin-left: 22px;
-    }
-    
-    /* Adjust label font size for smaller screens */
-    .board-label {
-        font-size: 11px;
-    }
-    
-    .row-label {
-        left: -20px;
-    }
-    
-    .col-label {
-        bottom: -20px;
+    .controls-container {
+        width: calc(100% - 40px);
+        margin-left: 20px;
+        margin-right: 20px;
     }
 }
 
-/* Further improvements for very small screens */
+/* Vertical stacking for very small screens */
 @media (max-width: 600px) {
-    body {
-        padding: 5px;
-    }
-    
-    h1 {
-        font-size: 24px;
-        margin: 15px 0;
-    }
-    
-    .controls {
-        flex-wrap: wrap;
-        gap: 4px;
+    .game-wrapper {
+        gap: 15px;
     }
 
-    .controls button {
-        flex: 1 1 calc(33.33% - 4px);
-        min-width: 0;
-        font-size: 12px;
-        padding: 6px 4px;
+    h1 {
+        margin-bottom: 10px;
     }
     
-    /* Make toggle buttons fit in the controls row */
-    .toggle-btn {
-        flex: 1 1 calc(33.33% - 4px);
-        min-width: 0;
-        font-size: 12px;
-        padding: 6px 4px;
+    /* Better button layout for small screens */
+    .controls-container {
+        gap: 6px;
     }
     
-    /* Make board labels even smaller on very small screens */
+    /* Make buttons more touch-friendly */
+    .control-btn, .toggle-btn, .auto-play-btn {
+        font-size: 13px;
+        padding: 10px 6px;
+        min-height: 44px; /* Better touch target */
+    }
+    
+    /* Ensure info panels are visible */
+    .info-section {
+        gap: 10px;
+    }
+    
+    .game-status, .ai-section, .move-history {
+        padding: 12px;
+    }
+    
+    /* Make history panel smaller */
+    .history-text {
+        height: 120px;
+    }
+}
+
+/* Modified grid layout for mobile */
+@media (max-width: 500px) {
+    /* Make buttons span full width */
+    .main-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .toggle-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .auto-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Adjust board to ensure labels are visible */
+    #board {
+        margin-left: 24px;
+        margin-right: 16px;
+        margin-bottom: 24px;
+        width: calc(100% - 40px);
+    }
+    
+    .controls-container {
+        width: calc(100% - 40px);
+        margin-left: 24px;
+        margin-right: 16px;
+    }
+    
+    /* Adjust board labels */
     .board-label {
-        font-size: 10px;
+        font-size: 11px;
+        font-weight: 700;
     }
     
     .row-label {
-        left: -18px;
-        width: 14px;
+        left: -22px;
+        width: 18px;
     }
     
     .col-label {
-        bottom: -18px;
-        width: 14px;
+        bottom: -22px;
+        width: 18px;
     }
     
-    /* Adjust board margins to match the increased label spacing */
-    #board {
-        margin-left: 20px;
-        margin-bottom: 20px;
-        width: calc(100% - 20px);
-    }
-    
-    .controls {
-        margin-left: 20px;
-        width: calc(100% - 20px);
-    }
-    
-    /* Stone positioning for small screens - ensure they're properly centered */
+    /* Make sure stones are clearly visible */
     .go {
-        width: 75%;
-        height: 75%;
+        width: 85%;
+        height: 85%;
     }
     
-    /* Adjust star points size for small screens */
-    .go-darkdot::after {
-        width: 6px;
-        height: 6px;
+    .go-place.black .go {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     }
     
-    /* Adjust section headers */
+    .go-place.white .go {
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        border: 1px solid #ccc;
+    }
+}
+
+/* Modified fix for landscape mode on mobile */
+@media (orientation: landscape) and (max-height: 500px) {
+    .game-wrapper {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 15px;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    .game-container {
+        width: 65%;
+        min-width: 300px;
+    }
+    
+    .info-section {
+        width: 35%;
+        max-width: 35%;
+    }
+    
+    #board {
+        width: calc(100% - 30px);
+        padding-bottom: calc(100% - 30px);
+    }
+    
+    .controls-container {
+        width: calc(100% - 30px);
+    }
+    
+    /* Stack buttons in landscape */
+    .main-controls, .toggle-controls, .auto-controls {
+        grid-template-columns: 1fr 1fr;
+        gap: 5px;
+    }
+    
+    /* Make panels more compact */
+    .game-status, .ai-section, .move-history {
+        padding: 10px;
+    }
+    
+    .history-text {
+        height: 80px;
+    }
+    
     .info-section h2 {
         font-size: 14px;
         margin-bottom: 8px;
     }
     
-    /* Make info boxes more compact */
-    .game-status, .ai-section, .move-history {
-        padding: 12px;
-    }
-    
-    .history-text {
-        height: 120px;
+    /* Adjust button sizing */
+    .control-btn, .toggle-btn, .auto-play-btn {
+        padding: 8px 5px;
         font-size: 12px;
-        padding: 8px;
+        min-height: 36px;
     }
-    
-    .ai-suggestion {
-        font-size: 12px;
-        padding: 8px;
-    }
-    
-    /* Make status text smaller */
-    .status-text {
-        font-size: 12px;
-    }
-}
-
-/* Touch-specific improvements to prevent accidental zoom/scroll */
-@media (pointer: coarse) {
-    /* Ensure stones are properly centered on touch devices */
-    .go-place {
-        /* Explicitly center the contents */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    
-    .go {
-        /* Ensure consistent stone appearance on mobile */
-        position: absolute;
-        width: 80%;
-        height: 80%;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-    
-    /* Increase tap target size for better touch accuracy */
-    .controls button {
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
-    
-    /* Portrait orientation specific adjustments for mobile */
-    @media (orientation: portrait) and (max-width: 600px) {
-        #board {
-            margin-left: 18px;
-            margin-bottom: 18px;
-            width: calc(100% - 18px);
-        }
-        
-        .row-label {
-            left: -16px;
-        }
-        
-        .col-label {
-            bottom: -16px;
-        }
-    }
-    
-    /* Landscape orientation specific adjustments for mobile */
-    @media (orientation: landscape) and (max-height: 450px) {
-        .game-wrapper {
-            flex-direction: row;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        
-        .game-container {
-            width: 60%;
-        }
-        
-        .info-section {
-            width: 35%;
-        }
-        
-        #board {
-            width: calc(100% - 20px);
-            height: 0;
-            padding-bottom: calc(100% - 20px);
-        }
-        
-        .history-text {
-            height: 80px;
-        }
-    }
-}
-
-/* Make sure all links in the navigation match the reference styles */
-a {
-    text-decoration: none;
-    color: inherit;
-}
-
-a:visited {
-    color: inherit;
-}
-
-a:hover {
-    text-decoration: underline;
 }

@@ -27,7 +27,6 @@ var book = [];
 var botName = '';
 // Store the last suggested move globally
 var lastSuggestedMove = 0;
-// Last moved piece tracking removed
 // Variables for autoplay
 var autoplayEnabled = false;
 var autoplaySide = -1; // -1 = none, 0 = red, 1 = black
@@ -48,9 +47,9 @@ var pieceFolder = 'traditional_pieces';
 const MOVE_SOUND = new Audio('game/sounds/move.wav');
 const CAPTURE_SOUND = new Audio('game/sounds/capture.wav');
 
-// square size - updated to match CSS
-const CELL_WIDTH = 52;  // Changed from 46 to match CSS
-const CELL_HEIGHT = 52; // Changed from 46 to match CSS
+// square size
+const CELL_WIDTH = 52;
+const CELL_HEIGHT = 52;
 
 // select color
 const SELECT_COLOR = 'brown';
@@ -68,8 +67,6 @@ function flipBoard() {
     addGlowToSelectedPiece(selectedSquare);
   }
 }
-
-// Last moved piece functions removed
 
 // Toggle AI autoplay
 function toggleAutoplay() {
@@ -109,17 +106,35 @@ function toggleAutoplay() {
   }
 }
 
-// render board in browser
+// Force PNG mode for all pieces
+const isCCBridgeEnabled = true;
+
 function drawBoard() {
   // Clear any existing glow effects before redrawing
   clearSelectedPieceGlow();
   
-  var chessBoard = '<table cellspacing="0" cellpadding="0"><tbody>'
-  let isCCBridge = document.getElementById('xiangqiboard').style.backgroundImage.includes('ccbridge');
+  // Check if we should use PNG or SVG files
+  // By default, check if we're using a CCBridge-style board which traditionally uses PNGs
+  let boardElement = document.getElementById('xiangqiboard');
+  let usesPng = false
+                
+  // Determine file extension to use
+  let fileExtension = usesPng ? '.png' : '.svg';
+  
+  // For debugging
+  console.log("Using file extension:", fileExtension);
+  
+  var chessBoard = '<table cellspacing="0" cellpadding="0"><tbody>';
+  
+  // Check if black pieces should be flipped
+  let blackPiecesFlipped = window.blackPiecesFlipped || false;
+  
+  // For debugging
+  console.log("Black pieces flipped:", blackPiecesFlipped);
   
   // board table
   for (let row = 0; row < 14; row++) {
-    chessBoard += '<tr>'
+    chessBoard += '<tr>';
     for (let col = 0; col < 11; col++) {
       let file, rank;
       
@@ -134,9 +149,49 @@ function drawBoard() {
       
       let square = rank * 11 + file;
       let piece = engine.getPiece(square);
-      // Removed inline width styling to use CSS instead
-      var pieceImage = '<img draggable="true"';
-      pieceImage += 'src="game/images/' + pieceFolder + '/' + piece + (isCCBridge ? '.png' : '.svg') + '"></img>';
+      
+      // Only create piece image if there is a piece
+      let pieceImage = '';
+      if (piece) {
+        // Check if it's a black piece (piece & 8 is true for black in xiangqi.js)
+        let isBlack = (piece & 8);
+        
+        // Determine the correct piece folder and/or rotation
+        let pieceSrc = pieceFolder;
+        let pieceStyle = '';
+        
+        // Apply rotation for black pieces if needed
+        if (isBlack && blackPiecesFlipped) {
+          if (fileExtension === '.png') {
+            // For PNG: use pre-rotated images if available
+            if (pieceExists('flipped_pieces', piece, fileExtension)) {
+              pieceSrc = 'flipped_pieces';
+            } else {
+              // Fallback to CSS rotation if flipped PNGs don't exist
+              pieceStyle = ' style="transform: rotate(180deg); transform-origin: center;"';
+            }
+          } else {
+            // For SVG: always use CSS transform (more reliable)
+            pieceStyle = ' style="transform: rotate(180deg); transform-origin: center;"';
+          }
+        }
+        
+        // Check if file exists - log for debugging
+        let imagePath = 'game/images/' + pieceSrc + '/' + piece + fileExtension;
+        console.log(`Trying to load: ${imagePath} (Black: ${isBlack}, Flipped: ${blackPiecesFlipped})`);
+        
+        // Create the image tag
+        pieceImage = '<img draggable="true"' + pieceStyle;
+        pieceImage += ' src="' + imagePath + '"';
+        pieceImage += ' onerror="this.onerror=null; console.error(\'Failed to load: \' + this.src); ';
+        
+        // If SVG fails, try PNG as fallback
+        if (fileExtension === '.svg') {
+          pieceImage += 'this.src=this.src.replace(\'.svg\', \'.png\');';
+        }
+        
+        pieceImage += '"></img>';
+      }
 
       if (engine.squareToString(square) != 'xx') {
         chessBoard += 
@@ -145,11 +200,10 @@ function drawBoard() {
           ' onclick="tapPiece(this.id)" ' + 
           ' ondragstart="dragPiece(event, this.id)" ' +
           ' ondragover="dragOver(event, this.id)"'+
-          ' ondrop="dropPiece(event, this.id)">' + (piece ? pieceImage : '') +
+          ' ondrop="dropPiece(event, this.id)">' + pieceImage +
           '</td>';
       }
     }
-
     chessBoard += '</tr>';
   }
 
@@ -160,8 +214,15 @@ function drawBoard() {
   if (clickLock && userSource) {
     addGlowToSelectedPiece(userSource);
   }
-  
-  // Last moved piece highlighting removed
+}
+
+// Helper function to check if a piece image exists
+// Note: This function doesn't actually verify file existence (which isn't possible in client JS)
+// but it's included for logical completeness and future implementation
+function pieceExists(folder, piece, extension) {
+  // In a real implementation, this would check if the file exists
+  // For now, we assume flipped_pieces exists if the folder is requested
+  return folder === 'flipped_pieces';
 }
 
 // Add a function to clear all indicators when needed
@@ -194,7 +255,7 @@ function highlightMoves(square) {
       dot.style.transform = 'translate(-50%, -50%)';
       dot.style.width = '16px';
       dot.style.height = '16px';
-      dot.style.backgroundColor = 'rgba(0, 220, 0, 0.7)';
+      dot.style.backgroundColor = 'rgba(74, 197, 242, 0.7)';
       dot.style.borderRadius = '50%';
       dot.style.zIndex = '5';
       
@@ -355,6 +416,37 @@ function dragPiece(event, square) {
   }
 }
 
+function dragOver(event, square) {
+  event.preventDefault();
+}
+
+function dropPiece(event, square) {
+  event.preventDefault();
+  
+  let fromSquare = parseInt(event.dataTransfer.getData("text"));
+  let toSquare = parseInt(square);
+  
+  if (fromSquare == toSquare) return;
+  
+  // Get the piece at the destination - used for making a capture sound
+  let targetPiece = engine.getPiece(toSquare);
+  
+  // Try the move
+  let valid = validateMove(fromSquare, toSquare);
+  
+  if (valid) {
+    movePiece(fromSquare, toSquare);
+    playSound(valid);
+    updatePgn();
+    
+    // Always clear the user source reference after a move
+    userSource = undefined;
+    
+    // If the move was made, have the AI think about a response
+    setTimeout(function() { think(); }, 1);
+  }
+}
+
 // Modified click event handler with piece glow effect and turn-based selection
 function tapPiece(square) {
   clearMoveIndicators();
@@ -504,8 +596,6 @@ function think() {
       drawBoard();
       
       if (engine.getPiece(targetSquare)) {
-        // Last moved piece effect removed
-        
         playSound(bestMove);
         updatePgn();
         userTime = Date.now();
@@ -530,9 +620,6 @@ function think() {
       drawBoard();
       
       if (engine.getPiece(targetSquare)) {
-        // Apply glow effect to the moved piece
-        addGlowToLastMovedPiece(targetSquare);
-        
         playSound(bestMove);
         updatePgn();
         userTime = Date.now();
@@ -541,7 +628,7 @@ function think() {
   }
 }
 
-// move piece in GUI - MODIFIED to add glow effect to last moved piece
+// move piece in GUI
 function movePiece(userSource, userTarget) {
   let moveString = engine.squareToString(userSource) +
                    engine.squareToString(userTarget);
@@ -549,8 +636,6 @@ function movePiece(userSource, userTarget) {
   // Always load moves, regardless of game state
   engine.loadMoves(moveString);
   drawBoard();
-  
-  // Last moved piece highlighting removed
 }
 
 // take move back - MODIFIED to reset game state and allow continued play
@@ -560,7 +645,6 @@ function undo() {
   try {
     engine.takeBack();
     drawBoard();
-    // Last moved piece tracking removed
     // Reset the last suggested move because the position has changed
     lastSuggestedMove = 0;
     // Update the UI
@@ -805,7 +889,6 @@ function newGame() {
   repetitions = 0;
   // Reset the last suggested move
   lastSuggestedMove = 0;
-  // Last moved piece tracking removed
   
   // Reset autoplay when starting a new game
   if (autoplayEnabled) {

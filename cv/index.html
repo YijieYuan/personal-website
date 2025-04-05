@@ -4,23 +4,22 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CV - Yijie Yuan</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="../style.css"/>
-  <link rel="stylesheet" href="../navbar.css"/>
-  <link rel="stylesheet" href="cv.css"/>
-  <script src="../script.js" defer></script>
+  
+  <!-- Link to stylesheets -->
+  <link rel="stylesheet" href="../css/normalize.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/layout/two-column.css" />
+  <link rel="stylesheet" href="./cv.css" />
 </head>
 <body>
   <!-- Navigation Section -->
   <header>
     <nav class="header-nav">
       <ul>
-        <li><a href="../">home</a></li>
-        <li><a href="../projects/">projects</a></li>
-        <li><a href="../playground/">playground</a></li>
-        <li><a href="./">cv</a></li>
+        <li><a href="../">Home</a></li>
+        <li><a href="../projects/">Projects</a></li>
+        <li><a href="../playground/">Playground</a></li>
+        <li><a href="./">CV</a></li>
       </ul>
     </nav>
   </header>
@@ -31,24 +30,70 @@
     <div class="section" id="honors-awards">
       <div class="section-title">Honors & Awards</div>
       <div class="section-content">
-        <p><strong>2015 | PKU Undergraduate Physics Tournament | 2nd Place (Team)</strong></p>
-        <p><strong>2014 | 31st Chinese Physics Olympiad (CPhO) | Silver Medal</strong></p>
+        <h3>2015</h3>
+        <div class="award-item">
+          <div class="award-name">PKU Undergraduate Physics Tournament</div>
+          <div class="award-result">2nd Place (Team)</div>
+        </div>
+        
+        <h3>2014</h3>
+        <div class="award-item">
+          <div class="award-name">31st Chinese Physics Olympiad (CPhO)</div>
+          <div class="award-result">Silver Medal</div>
+        </div>
       </div>
     </div>
     
     <div class="section" id="ai-competitions">
-      <div class="section-title">AI & Data Science Competitions</div>
+      <div class="section-title">
+        AI & Data Science Competitions
+        <div class="prize-meter" id="prizeMeter">
+          <div class="prize-label">Earnings</div>
+          <div class="prize-slots">
+            <div class="slot">$</div>
+            <div class="digit-slot"> </div>
+            <div class="digit-slot"> </div>
+            <div class="digit-slot"> </div>
+            <div class="digit-slot"> </div>
+            <div class="digit-slot"> </div>
+          </div>
+        </div>
+      </div>
       <div class="section-content">
         <h3>2024</h3>
-        <p>MIDRC - XAI Grand Challenge | 3rd Place</p>
-        <p>Kaggle - CMI Problematic Children Internet Use | Solo Silver Medal: Ranked 91st out of 3,628 teams.</p>
+        <div class="award-item">
+          <div class="award-name">MIDRC - XAI Grand Challenge</div>
+          <div class="award-result">3rd Place (84 teams)</div>
+        </div>
+        
+        <div class="award-item">
+          <div class="award-name">Kaggle - CMI Problematic Children Internet Use</div>
+          <div class="award-result">Silver Medal (91/3,628)</div>
+        </div>
     
         <h3>2023</h3>
-        <p>MIDRC - mRALE Mastermind Challenge | 5th Place</p>
-    
-        <p><span class="led-display">🏆 Total Prize Earnings: $12,000 🎉</span></p>
+        <div class="award-item">
+          <div class="award-name">MIDRC - mRALE Mastermind Challenge</div>
+          <div class="award-result">5th Place</div>
+        </div>
       </div>
     </div>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const prizeMeter = document.getElementById('prizeMeter');
+        let isRevealed = false;
+        
+        prizeMeter.addEventListener('click', function() {
+          if (isRevealed) {
+            prizeMeter.classList.remove('active');
+          } else {
+            prizeMeter.classList.add('active');
+          }
+          isRevealed = !isRevealed;
+        });
+      });
+    </script>
     
     <div class="section" id="peer-reviewed-publications">
       <div class="section-title">Peer-Reviewed Publications</div>
@@ -76,20 +121,52 @@
 
     <div class="section" id="presentations">
       <div class="section-title">Presentations</div>
-      <div class="section-content">        
-        <p>2025-02 "Recovery of GLRLM Features in Degraded Images using Deep Learning and Image Property Models", SPIE Medical Imaging, Poster Presentation</p>
-        <p>2024-12 "MIDRC XAI Grand Challenge Review: AI Decisions for Pneumonia", MIDRC Seminar Series | <a href="https://www.youtube.com/watch?v=AYa40jlol7k">Watch here</a></p>
+      <div class="section-content">    
+        <div class="presentation-item">
+          <div class="presentation-date">2025-02</div>
+          <div class="presentation-details">
+            <div class="presentation-title">"Recovery of GLRLM Features in Degraded Images using Deep Learning and Image Property Models"</div>
+            <div class="presentation-venue">SPIE Medical Imaging, Poster Presentation</div>
+          </div>
+        </div>
+        
+        <div class="presentation-item">
+          <div class="presentation-date">2024-12</div>
+          <div class="presentation-details">
+            <div class="presentation-title">"MIDRC XAI Grand Challenge Review: AI Decisions for Pneumonia"</div>
+            <div class="presentation-venue">MIDRC Seminar Series | <a href="https://www.youtube.com/watch?v=AYa40jlol7k">Watch here</a></div>
+          </div>
+        </div>
 
-        <p>2024-07 "End-to-End Deep Learning Restoration of GLCM Features from Blurred and Noisy Images", 66th American Association of Physicists in Medicine Annual Meeting, Oral Presentation</p>
-        <p>2024-02 "End-to-End Deep Learning Restoration of GLCM Features from Blurred and Noisy Images", SPIE Medical Imaging, Oral Presentation</p>
-        <p>2023-02 "Deep Learning CT Image Restoration Using System Blur Models", SPIE Medical Imaging, Poster Presentation</p>
+        <div class="presentation-item">
+          <div class="presentation-date">2024-07</div>
+          <div class="presentation-details">
+            <div class="presentation-title">"End-to-End Deep Learning Restoration of GLCM Features from Blurred and Noisy Images"</div>
+            <div class="presentation-venue">66th American Association of Physicists in Medicine Annual Meeting, Oral Presentation</div>
+          </div>
+        </div>
+        
+        <div class="presentation-item">
+          <div class="presentation-date">2024-02</div>
+          <div class="presentation-details">
+            <div class="presentation-title">"End-to-End Deep Learning Restoration of GLCM Features from Blurred and Noisy Images"</div>
+            <div class="presentation-venue">SPIE Medical Imaging, Oral Presentation | <a href="https://www.spiedigitallibrary.org/conference-proceedings-of-spie/12927/129271C/End-to-end-deep-learning-restoration-of-GLCM-features-from/10.1117/12.3006205.short">Watch here</a></div>
+          </div>
+        </div>
+        
+        <div class="presentation-item">
+          <div class="presentation-date">2023-02</div>
+          <div class="presentation-details">
+            <div class="presentation-title">"Deep Learning CT Image Restoration Using System Blur Models"</div>
+            <div class="presentation-venue">SPIE Medical Imaging, Poster Presentation</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="divider"></div>
   <footer>
-    &copy; Yijie Yuan. <span class="last-updated">Last Updated: <span id="update-date"></span></span>
+    &copy; Yijie Yuan. <span class="last-updated">Last Updated: April 2025</span>
   </footer>
 </body>
 </html>
